@@ -20,8 +20,8 @@ userManagement.post('/addUser', auth.addUserToAuthList, (req, res) => {
 
 userManagement.get('/logout', [
 	(req, res, next) => {	
-		const userinfo = auth.getUserInfo(req.session.id);	
-		chatManagement.appendUserLogoutMessage(userinfo);
+		const userInfo = auth.getUserInfo(req.session.id);	
+		chatManagement.appendUserLogoutMessage(userInfo);
 		next();
 	}, 
 	auth.removeUserFromAuthList, 

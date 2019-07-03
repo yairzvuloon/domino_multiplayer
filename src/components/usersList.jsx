@@ -5,7 +5,8 @@ export default class UsersList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      usersList: { 12: "yohai", 3: "yair" }
+      //usersList: { 12: "Jack", 3: "yair" }
+      usersList: { }
     };
     this.getUserList = this.getUserList.bind(this);
   }
