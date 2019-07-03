@@ -16,7 +16,7 @@ export default class LoginModal extends React.Component {
     render() {
         return (
             <div className="login-page-wrapper">
-                <img className="taki-logo" src={takiImage} />
+                <h1>Domino multiplayer</h1>
                 <form onSubmit={this.handleLogin}>
                     <label className="username-label" htmlFor="userName"> name: </label>
                     <input className="username-input" name="userName"/>                        
