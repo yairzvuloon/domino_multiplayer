@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import takiImage from './resources/superTaki.jpg';
 
 export default class LoginModal extends React.Component {
     constructor(args) {

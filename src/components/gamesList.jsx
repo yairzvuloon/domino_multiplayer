@@ -5,14 +5,13 @@ export default class GamesList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      //gamesList: { 12: "gameName1", 3: "gameName2" }
-     gamesList: { 12: "gameName1", 3: "gameName2" }
+      //usersList: { 12: "Jack", 3: "yair" }
+      gamesList:  { 12: "gameName2", 3: "gameName1" }
     };
-    this.getGamesList = this.getGamesList.bind(this);
   }
 
   componentDidMount() {
-    //this.getGamesList();
+   
 }
 
 componentWillUnmount() {
@@ -22,13 +21,13 @@ componentWillUnmount() {
 }
 
   getGamesList() {
-
-  }
+   
+}
 
   render() {
     return (
       <div>
-        <h2>games List:</h2>
+        <h2>Games List:</h2>
         <ul>
           {Object.keys(this.state.gamesList).map(id => (
             <li>{this.state.gamesList[id]}</li>
