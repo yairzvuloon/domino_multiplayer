@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import LoginModal from './login-modal.jsx';
 import ChatContaier from './chatContainer.jsx';
+import UsersList from './usersList.jsx';
 
 export default class BaseContainer extends React.Component {
     constructor(args) {
@@ -45,6 +46,7 @@ export default class BaseContainer extends React.Component {
                     Hello {this.state.currentUser.name}
                     <button className="logout btn" onClick={this.logoutHandler}>Logout</button>
                 </div>
+                <UsersList/>
                 <ChatContaier />                
             </div>
         )

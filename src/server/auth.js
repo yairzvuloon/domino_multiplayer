@@ -36,5 +36,8 @@ function removeUserFromAuthList(req, res, next) {
 function getUserInfo(id) {	
     return {name: userList[id]};
 }
+function getUserList() {	
+    return userList;
+}
 
-module.exports = {userAuthentication, addUserToAuthList, removeUserFromAuthList, getUserInfo}
+module.exports = {userAuthentication, addUserToAuthList, removeUserFromAuthList, getUserInfo, getUserList}
