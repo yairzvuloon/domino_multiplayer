@@ -22,7 +22,7 @@ export default class BaseContainer extends React.Component {
         this.fetchUserInfo = this.fetchUserInfo.bind(this);
         this.logoutHandler= this.logoutHandler.bind(this);
 
-        this.getUserName();
+        //this.getUserName();
     }
     
     render() {        
