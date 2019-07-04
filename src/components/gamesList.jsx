@@ -6,11 +6,14 @@ export default class GamesList extends React.Component {
     super(props);
     this.state = {
       //usersList: { 12: "Jack", 3: "yair" }
-      gamesList: { 12: "gameName2", 3: "gameName1" }
+      gamesList: {}
     };
+    this.getGamesList = this.getGamesList.bind(this);
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getGamesList();
+  }
 
   componentWillUnmount() {
     if (this.timeoutId) {
@@ -18,7 +21,23 @@ export default class GamesList extends React.Component {
     }
   }
 
-  getGamesList() {}
+  getGamesList() {
+    return fetch("/games/allGames", { method: "GET", credentials: "include" })
+      .then(response => {
+        this.timeoutId = setTimeout(this.getGamesList, 200);
+
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
+      })
+      .then(gamesList => {
+        this.setState(() => ({ gamesList }));
+      })
+      .catch(err => {
+        throw err;
+      });
+  }
 
   render() {
     return (
@@ -26,7 +45,7 @@ export default class GamesList extends React.Component {
         <h2>Games List:</h2>
         <ul>
           {Object.keys(this.state.gamesList).map(id => (
-            <li>{this.state.gamesList[id]}</li>
+            <li>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
         </ul>
       </div>

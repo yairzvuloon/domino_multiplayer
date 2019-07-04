@@ -49,10 +49,10 @@ export default class BaseContainer extends React.Component {
                     Hello {this.state.currentUser.name}
                     <button className="logout btn" onClick={this.logoutHandler}>Logout</button>
                 </div>
-                <NewGameModal currentUser={this.state.currentUser}/>
                 <GamesList/>
                 <UsersList/>
-                <ChatContaier />                
+                <ChatContaier />
+                <NewGameModal currentUser={this.state.currentUser}/>                     
             </div>
         )
     }

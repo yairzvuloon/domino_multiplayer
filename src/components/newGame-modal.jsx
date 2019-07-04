@@ -32,7 +32,6 @@ export default class NewGameModal extends React.Component {
         <h1>Domino multiplayer</h1>
         <h1>Lobby</h1>
         <form onSubmit={this.handleGameRoomCreator}>
-        
           <label className="username-label" htmlFor="userName">
             {" "}
             room name:{" "}
@@ -59,7 +58,7 @@ export default class NewGameModal extends React.Component {
     const numOfPlayers = e.target.elements.numOfPlayers.value;
     let gameObj = new GameData(this.state.id, gameName, numOfPlayers);
 
-    fetch('/games/addGame', {method:'POST', body: JSON(gameObj), credentials: 'include'})
+    fetch('/games/addGame', {method:'POST', body: JSON.stringify(gameObj), credentials: 'include'})
     .then(response=> {
         if (response.ok){
             this.setState(()=> ({errMessage: ""}));

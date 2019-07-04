@@ -15,12 +15,12 @@ function addGameToGamesList(req, res, next) {
 		for (sessionId in gamesList) {
 			const name = gamesList[sessionId];
 			if (name === req.body) {
-				res.status(403).send('game name already exist');
+				res.status(403).send('game name already exist!');
 				return;
 			}
 		}		
 		gamesList[req.session.id] = req.body;
-		next();
+		next();		
 	}
 }
 function getGamesList() {	
