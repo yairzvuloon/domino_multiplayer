@@ -1,18 +1,19 @@
 const express = require('express');
-const router = express.Router();
-const auth = require('./auth');
-
+const games = require('./gamesAuth');
 const gamesListManagement = express.Router();
 
-// gamesListManagement.get('/', auth.userAuthentication, (req, res) => {
-// 	const userName = auth.getUserInfo(req.session.id).name;
-// 	res.json({name:userName});
-// });
+gamesListManagement.get('/', games.gameAuthentication, (req, res) => {
+	const game = games.getGameInfo(req.session.id);
+	res.json(game);
+});
 
-// gamesListManagement.get('/allUsers', auth.userAuthentication, (req, res) => {	
-// 	res.json(auth.getUserList());
-// });
 
-// gamesListManagement.post('/addUser', auth.addUserToAuthList, (req, res) => {		
-// 	res.sendStatus(200);	
-// });
+gamesListManagement.post('/addGame', games.addGameToGamesList, (req, res) => {		
+	res.sendStatus(200);	
+});
+
+
+gamesListManagement.get('/allGames', games.gameAuthentication, (req, res) => {	
+	res.json(games.getGamesList());
+});
+module.exports = gamesListManagement;

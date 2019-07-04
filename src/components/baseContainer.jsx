@@ -4,6 +4,7 @@ import LoginModal from './login-modal.jsx';
 import ChatContaier from './chatContainer.jsx';
 import UsersList from './usersList.jsx';
 import GamesList from './gamesList.jsx';
+import NewGameModal from './newGame-modal.jsx';
 
 
 export default class BaseContainer extends React.Component {
@@ -12,7 +13,7 @@ export default class BaseContainer extends React.Component {
         this.state = {
             showLogin: true,
             currentUser: {
-                name: ''
+                //name: ''
             }
         };
         
@@ -48,6 +49,7 @@ export default class BaseContainer extends React.Component {
                     Hello {this.state.currentUser.name}
                     <button className="logout btn" onClick={this.logoutHandler}>Logout</button>
                 </div>
+                <NewGameModal currentUser={this.state.currentUser}/>
                 <GamesList/>
                 <UsersList/>
                 <ChatContaier />                
