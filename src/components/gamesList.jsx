@@ -6,23 +6,19 @@ export default class GamesList extends React.Component {
     super(props);
     this.state = {
       //usersList: { 12: "Jack", 3: "yair" }
-      gamesList:  { 12: "gameName2", 3: "gameName1" }
+      gamesList: { 12: "gameName2", 3: "gameName1" }
     };
   }
 
-  componentDidMount() {
-   
-}
+  componentDidMount() {}
 
-componentWillUnmount() {
+  componentWillUnmount() {
     if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
+      clearTimeout(this.timeoutId);
     }
-}
+  }
 
-  getGamesList() {
-   
-}
+  getGamesList() {}
 
   render() {
     return (

@@ -12,10 +12,11 @@ function addUserToAuthList(req, res, next) {
 	if (userList[req.session.id] !== undefined) {
 		res.status(403).send('user already exist');
 	} else {		
-		for (sessionid in userList) {
-			const name = userList[sessionid];
+		for (sessionId in userList) {
+			const name = userList[sessionId];
 			if (name === req.body) {
 				res.status(403).send('user name already exist');
+				
 				return;
 			}
 		}		
