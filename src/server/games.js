@@ -10,11 +10,11 @@ function gameAuthentication(req, res, next) {
 
 function addGameToGamesList(req, res, next) {	
 	if (gamesList[req.session.id] !== undefined) {
-		res.status(403).send('game already exist');
+		res.status(403).send("unable to create 2 room, for one host.");
 	} else {		
 		for (sessionId in gamesList) {
-			const name = gamesList[sessionId];
-			if (name === req.body) {
+			const gameData = gamesList[sessionId];
+			if (JSON.parse(gameData).gameName === JSON.parse(req.body).gameName) {
 				res.status(403).send('game name already exist!');
 				return;
 			}
@@ -27,17 +27,18 @@ function getGamesList() {
     return gamesList;
 }
 
-module.exports = {gameAuthentication, addGameToGamesList, getGamesList}
-
-// function removeUserFromAuthList(req, res, next) {	
-// 	if (userList[req.session.id] === undefined) {
-// 		res.status(403).send('user does not exist');
-// 	} else {						
-// 		delete userList[req.session.id];
-// 		next();
-// 	}
-// }
+function removeGameFromGamesList(req, res, next) {	
+	if (gamesList[req.session.id] === undefined) {
+		res.status(403).send('game does not exist');
+	} else {						
+		delete gamesList[req.session.id];
+		next();
+	}
+}
 
 // function getUserInfo(id) {	
 //     return {name: userList[id]};
 // }
+
+module.exports = {gameAuthentication, addGameToGamesList, getGamesList, removeGameFromGamesList}
+

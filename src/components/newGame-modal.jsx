@@ -65,7 +65,7 @@ export default class NewGameModal extends React.Component {
             //this.props.loginSuccessHandler();
         } else {
             if (response.status === 403) {
-                this.setState(()=> ({errMessage: "Game name already exist, please try another one"}));
+                this.setState(()=> ({errMessage: "Game name already exist, or you host of other room"}));
             }
             //this.props.loginErrorHandler();
         }

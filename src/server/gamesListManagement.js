@@ -12,7 +12,6 @@ gamesListManagement.post("/addGame", games.addGameToGamesList, (req, res) => {
 	res.sendStatus(200);	
 });
 
-
 gamesListManagement.get("/allGames", (req, res) => {	
 	let list=games.getGamesList();	
 	res.json(list);

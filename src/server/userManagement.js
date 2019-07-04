@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("./auth");
 const chatManagement = require("./chat");
+const games= require("./games")
 
 const userManagement = express.Router();
 
@@ -25,6 +26,7 @@ userManagement.get("/logout", [
     next();
   },
   auth.removeUserFromAuthList,
+  games.removeGameFromGamesList,
   (req, res) => {
     res.sendStatus(200);
   }
