@@ -20,7 +20,7 @@ export default class NewGameModal extends React.Component {
 
     this.state = {
       errMessage: "",
-      hostName: props.currentUser
+      hostName: props.currentUser,
     };
 
     this.handleGameRoomCreator = this.handleGameRoomCreator.bind(this);
@@ -29,13 +29,16 @@ export default class NewGameModal extends React.Component {
   render() {
     return (
       <div className="new-game-div">
-        <form className="new-game-wrapper" onSubmit={this.handleGameRoomCreator}>
+        <form
+          className="new-game-wrapper"
+          onSubmit={this.handleGameRoomCreator}
+        >
           <label className="newGame-input-label" htmlFor="userName">
-           room name:{" "}
+            room name:{" "}
           </label>
           <input className="newGame-input" name="gameName" />
           <label className="newGame-input-label" htmlFor="userName">
-           num of players:{" "}
+            num of players:{" "}
           </label>
           <input className="newGame-input" name="numOfPlayers" />
           <input className="submit-btn btn" type="submit" value="confirm" />
@@ -58,18 +61,36 @@ export default class NewGameModal extends React.Component {
     const numOfPlayers = e.target.elements.numOfPlayers.value;
     let gameObj = new GameData(this.state.id, gameName, numOfPlayers);
 
-    fetch('/games/addGame', {method:'POST', body: JSON.stringify(gameObj), credentials: 'include'})
-    .then(response=> {
-        if (response.ok){
-            this.setState(()=> ({errMessage: ""}));
-            //this.props.loginSuccessHandler();
-        } else {
-            if (response.status === 403) {
-                this.setState(()=> ({errMessage: "Game name already exist, or you host of other room"}));
-            }
-            //this.props.loginErrorHandler();
+    fetch("/games/addGame", {
+      method: "POST",
+      body: JSON.stringify(gameObj),
+      credentials: "include"
+    }).then(response => {
+      if (response.ok) {
+        this.setState(() => ({ errMessage: "" }));
+       this.props.createNewGameSuccessHandler();
+      } else {
+        if (response.status === 403) {
+          this.setState(() => ({
+            errMessage: "Game name already exist, or you host of other room"
+          }));
         }
+        this.props.createNewGameErrorHandler();
+      }
     });
     return false;
   }
+
+  getGameRoom() {
+    alert("new room opened");
+  }
+
+  // handleSucceedCreateNewRoom() {
+  //   this.setState(() => ({ showLobby: false }), this.getGameRoom);
+  // }
+
+  // createRoomErrorHandler() {
+  //   console.error("create new room failed");
+  //   this.setState(() => ({ showLobby: true }));
+  // }
 }
