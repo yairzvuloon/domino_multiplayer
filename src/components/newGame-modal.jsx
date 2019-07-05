@@ -9,7 +9,7 @@ class GameData {
     this.numPlayerToStart = i_NumPlayerToStart;
     this.numberOfSubscribes = 1;
     this.isGameStart = false;
-    this.subscribesIdStrings = new Array(this.numPlayerToStart);
+    this.subscribesIdStrings = new Array(i_NumPlayerToStart);
     this.subscribesIdStrings[0] = i_HostId;
   }
 }
@@ -20,7 +20,7 @@ export default class NewGameModal extends React.Component {
 
     this.state = {
       errMessage: "",
-      hostName: props.currentUser,
+      hostName: props.currentUser
     };
 
     this.handleGameRoomCreator = this.handleGameRoomCreator.bind(this);
@@ -59,7 +59,11 @@ export default class NewGameModal extends React.Component {
     e.preventDefault();
     const gameName = e.target.elements.gameName.value;
     const numOfPlayers = e.target.elements.numOfPlayers.value;
-    let gameObj = new GameData(this.state.id, gameName, numOfPlayers);
+    let gameObj = new GameData(
+      this.props.currentUser.id,
+      gameName,
+      numOfPlayers
+    );
 
     fetch("/games/addGame", {
       method: "POST",
@@ -68,7 +72,7 @@ export default class NewGameModal extends React.Component {
     }).then(response => {
       if (response.ok) {
         this.setState(() => ({ errMessage: "" }));
-       this.props.createNewGameSuccessHandler();
+        this.props.createNewGameSuccessHandler();
       } else {
         if (response.status === 403) {
           this.setState(() => ({

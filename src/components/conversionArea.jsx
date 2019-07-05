@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-export default class converssionArea extends React.Component {
+export default class ConversionArea extends React.Component {
     constructor(args) {
         super(...args);
         
