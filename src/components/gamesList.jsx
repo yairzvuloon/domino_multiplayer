@@ -39,6 +39,8 @@ export default class GamesList extends React.Component {
       });
   }
 
+  
+
   render() {
     return (
       <div className="gamesList-wrapper">
