@@ -28,16 +28,16 @@ export default class NewGameModal extends React.Component {
 
   render() {
     return (
-      <div className="login-page-wrapper">
-        <h1>Domino multiplayer</h1>
-        <h1>Lobby</h1>
-        <form onSubmit={this.handleGameRoomCreator}>
-          <label className="username-label" htmlFor="userName">
-            {" "}
-            room name:{" "}
+      <div className="new-game-div">
+        <form className="new-game-wrapper" onSubmit={this.handleGameRoomCreator}>
+          <label className="newGame-input-label" htmlFor="userName">
+           room name:{" "}
           </label>
-          <input className="username-input" name="gameName" />
-          <input className="username-input" name="numOfPlayers" />
+          <input className="newGame-input" name="gameName" />
+          <label className="newGame-input-label" htmlFor="userName">
+           num of players:{" "}
+          </label>
+          <input className="newGame-input" name="numOfPlayers" />
           <input className="submit-btn btn" type="submit" value="confirm" />
         </form>
         {this.renderErrorMessage()}

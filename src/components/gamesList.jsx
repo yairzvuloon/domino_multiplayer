@@ -41,11 +41,11 @@ export default class GamesList extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="gamesList-wrapper">
         <h2>Games List:</h2>
         <ul>
           {Object.keys(this.state.gamesList).map(id => (
-            <li>{JSON.parse(this.state.gamesList[id]).gameName}</li>
+            <li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
         </ul>
       </div>

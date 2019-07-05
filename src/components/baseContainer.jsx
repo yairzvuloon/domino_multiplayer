@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import LoginModal from './login-modal.jsx';
-import ChatContaier from './chatContainer.jsx';
+import ChatContainer from './chatContainer.jsx';
 import UsersList from './usersList.jsx';
 import GamesList from './gamesList.jsx';
 import NewGameModal from './newGame-modal.jsx';
@@ -44,15 +44,27 @@ export default class BaseContainer extends React.Component {
 
     renderChatRoom() {
         return(
-            <div className="chat-base-container">
+            <div className="home-base-container">
+               
                 <div className="user-info-area">
                     Hello {this.state.currentUser.name}
                     <button className="logout btn" onClick={this.logoutHandler}>Logout</button>
+                    <h1>Domino multiplayer</h1>
                 </div>
+                 <div className="games-rooms-container">
+                <div className="new-game-area">
+                <NewGameModal currentUser={this.state.currentUser}/> 
+                </div>
+
+                <div className="games-list-area">
                 <GamesList/>
+                </div>
+                
+                <div className="users-list-area">
                 <UsersList/>
-                <ChatContaier />
-                <NewGameModal currentUser={this.state.currentUser}/>                     
+                </div>
+                </div>      
+                <ChatContainer />
             </div>
         )
     }
