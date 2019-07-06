@@ -20,7 +20,7 @@ export default class NewGameModal extends React.Component {
 
     this.state = {
       errMessage: "",
-      hostName: props.currentUser
+      hostName: props.currentUser,
     };
 
     this.handleGameRoomCreator = this.handleGameRoomCreator.bind(this);
@@ -76,7 +76,7 @@ export default class NewGameModal extends React.Component {
       } else {
         if (response.status === 403) {
           this.setState(() => ({
-            errMessage: "Game name already exist, or you host of other room"
+            errMessage: " Game name already exist, or you host of other room"
           }));
         }
         this.props.createNewGameErrorHandler();
