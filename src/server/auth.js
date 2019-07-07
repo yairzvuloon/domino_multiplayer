@@ -47,8 +47,8 @@ function addRoomToUser(req, res, next) {
           return;
         }
       }
-	  userList[req.session.id] = req.body;
-	  next();
+      userList[req.session.id] = req.body;
+      res.sendStatus(200);
     }
   }
 }

@@ -22,7 +22,6 @@ userManagement.post("/addUser", auth.addUserToAuthList, (req, res) => {
 
 userManagement.post("/addRoom", (req, res, next) => {
   auth.addRoomToUser(req, res, next);
-  res.sendStatus(200);
 });
 
 userManagement.get("/logout", [

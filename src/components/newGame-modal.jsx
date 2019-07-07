@@ -20,7 +20,7 @@ export default class NewGameModal extends React.Component {
 
     this.state = {
       errMessage: "",
-      hostName: props.currentUser,
+      hostName: props.currentUser
     };
 
     this.handleGameRoomCreator = this.handleGameRoomCreator.bind(this);
@@ -64,15 +64,14 @@ export default class NewGameModal extends React.Component {
       gameName,
       numOfPlayers
     );
-
     fetch("/games/addGame", {
       method: "POST",
       body: JSON.stringify(gameObj),
       credentials: "include"
     }).then(response => {
       if (response.ok) {
-      this.props.updateMyRoomId();//the state doesn't update
-        //this.props.addRoomToUser(); we have big problem here!!
+        this.props.updateMyRoomId(); //the state doesn't update
+        //this.props.addRoomToUser(); //we have big problem here!!
         this.props.createNewGameSuccessHandler();
       } else {
         if (response.status === 403) {
