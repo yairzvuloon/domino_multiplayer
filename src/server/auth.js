@@ -47,10 +47,10 @@ function addRoomToUser(req, res, next) {
           return;
         }
       }
-      userList[req.session.id] = req.body;
+	  userList[req.session.id] = req.body;
+	  next();
     }
   }
-  next();
 }
 
 function removeUserFromAuthList(req, res, next) {
