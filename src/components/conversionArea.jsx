@@ -31,12 +31,13 @@ export default class ConversionArea extends React.Component {
     }
 
     getChatContent() {
+        const interval = 10000;//TODO: change to 200 
         return fetch('/chat', {method: 'GET', credentials: 'include'})
         .then((response) => {
             if (!response.ok){
                 throw response;
             }
-            this.timeoutId = setTimeout(this.getChatContent, 200);
+            this.timeoutId = setTimeout(this.getChatContent, interval);
             return response.json();            
         })
         .then(content => {

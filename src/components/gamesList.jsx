@@ -22,9 +22,10 @@ export default class GamesList extends React.Component {
   }
 
   getGamesList() {
+    const interval = 10000;//TODO: change to 200 
     return fetch("/games/allGames", { method: "GET", credentials: "include" })
       .then(response => {
-        this.timeoutId = setTimeout(this.getGamesList, 200);
+        this.timeoutId = setTimeout(this.getGamesList, interval);
 
         if (!response.ok) {
           throw response;

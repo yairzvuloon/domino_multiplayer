@@ -22,16 +22,18 @@ export default class UsersList extends React.Component {
   }
 
   getUserList() {
+    const interval = 10000;//TODO: change to 200
     return fetch("/users/allUsers", { method: "GET", credentials: "include" })
       .then(response => {
         if (!response.ok) {
           throw response;
         }
-        this.timeoutId = setTimeout(this.getUserList, 200);
+
+        this.timeoutId = setTimeout(this.getUserList, interval);
         return response.json();
       })
       .then(usersList => {
-        this.setState(() => ({usersList}));
+        this.setState(() => ({ usersList }));
       })
       .catch(err => {
         throw err;

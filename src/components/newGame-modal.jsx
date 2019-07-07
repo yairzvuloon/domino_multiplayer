@@ -68,20 +68,25 @@ export default class NewGameModal extends React.Component {
       method: "POST",
       body: JSON.stringify(gameObj),
       credentials: "include"
-    }).then(response => {
-      if (response.ok) {
-        this.props.updateMyRoomId(); //the state doesn't update
+    })
+      .then(response => {
+        //if (response.ok) {
+        //this.props.updateMyRoomId(); //the state doesn't update
         //this.props.addRoomToUser(); //we have big problem here!!
-        this.props.createNewGameSuccessHandler();
-      } else {
-        if (response.status === 403) {
-          this.setState(() => ({
-            errMessage: " Game name already exist, or you host of other room"
-          }));
+        //this.props.createNewGameSuccessHandler();
+        //} else {
+        if (!response.ok) {
+          if (response.status === 403) {
+            this.setState(() => ({
+              errMessage: " Game name already exist, or you host of other room"
+            }));
+          }
+          this.props.createNewGameErrorHandler();
         }
-        this.props.createNewGameErrorHandler();
-      }
-    });
+      })
+      .then(()=>this.props.updateMyRoomId())
+      .then(()=>this.props.addRoomToUser())
+      .then(()=>this.props.createNewGameSuccessHandler());
     return false;
   }
 

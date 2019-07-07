@@ -25,7 +25,7 @@ function addUserToAuthList(req, res, next) {
   }
 }
 
-function deleteUser(req) {
+function deleteUser(req, res) {
   const val = userList[req.session.id] !== undefined;
   if (userList[req.session.id] === undefined) {
     res.status(403).send("user does not exist");
@@ -36,20 +36,26 @@ function deleteUser(req) {
 }
 
 function addRoomToUser(req, res, next) {
-  if (deleteUser(req)) {
-    if (userList[req.session.id] !== undefined) {
-      res.status(403).send("user already exist");
-    } else {
-      for (sessionId in userList) {
-        const name = userList[sessionId];
-        if (name === req.body) {
-          res.status(403).send("user name already exist");
-          return;
-        }
-      }
-      userList[req.session.id] = req.body;
-      res.sendStatus(200);
-    }
+  // if (deleteUser(req, res)) {
+  //   if (userList[req.session.id] !== undefined) {
+  //     res.status(403).send("user already exist");
+  //   } else {
+  //     for (sessionId in userList) {
+  //       const user = userList[sessionId];
+  //       if (user === req.body) {
+  //         res.status(403).send("user name already exist");
+  //         return;
+  //       }
+  //     }
+  //     userList[req.session.id] = req.body;
+  //     res.sendStatus(200);
+  //   }
+  // }
+  if (userList[req.session.id] !== undefined) {
+    JSON.parse(userList[req.session.id]).roomId = JSON.parse(req.body).roomId;
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(403);
   }
 }
 
