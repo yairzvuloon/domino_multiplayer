@@ -71,7 +71,8 @@ export default class NewGameModal extends React.Component {
       credentials: "include"
     }).then(response => {
       if (response.ok) {
-        this.setState(() => ({ errMessage: "" }));
+      this.props.updateMyRoomId();
+        //this.props.addRoomToUser(); we have big problem here!!
         this.props.createNewGameSuccessHandler();
       } else {
         if (response.status === 403) {

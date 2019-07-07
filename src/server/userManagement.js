@@ -7,8 +7,9 @@ const games= require("./games")
 const userManagement = express.Router();
 
 userManagement.get("/", auth.userAuthentication, (req, res) => {
-  const userName = auth.getUserInfo(req.session.id).name;
-  res.json({ id: req.session.id, name: userName });
+  const user = auth.getUserInfo(req.session.id);
+  //res.json({ id: req.session.id, name: user.name, roomId:user.roomId  });
+  res.json(user)
 });
 
 userManagement.get("/allUsers", auth.userAuthentication, (req, res) => {
@@ -16,6 +17,11 @@ userManagement.get("/allUsers", auth.userAuthentication, (req, res) => {
 });
 
 userManagement.post("/addUser", auth.addUserToAuthList, (req, res) => {
+  res.sendStatus(200);
+});
+
+userManagement.post("/addRoom", (req, res, next) => {
+  auth.addRoomToUser(req, res, next);
   res.sendStatus(200);
 });
 

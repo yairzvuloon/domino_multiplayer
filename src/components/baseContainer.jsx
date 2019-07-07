@@ -7,8 +7,8 @@ import GamesList from "./gamesList.jsx";
 import NewGameModal from "./newGame-modal.jsx";
 
 export default class BaseContainer extends React.Component {
-  constructor(args) {
-    super(...args);
+  constructor(props) {
+    super(props);
     this.state = {
       showLogin: true,
       showLobby: false,
@@ -26,6 +26,8 @@ export default class BaseContainer extends React.Component {
     this.handleCreateRoomError = this.handleCreateRoomError.bind(this);
     this.fetchUserInfo = this.fetchUserInfo.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
+    this.handleAddRoomToUser = this.handleAddRoomToUser.bind(this);
+    this.updateMyRoomId = this.updateMyRoomId.bind(this);
 
     //this.getUserName();
   }
@@ -40,15 +42,18 @@ export default class BaseContainer extends React.Component {
       );
     } else if (this.state.showLobby) {
       return this.renderLobby();
-    } 
-    else {
+    } else {
       //rander Game
       return <h1>game!!!!!</h1>;
     }
   }
 
   handleSucceededLogin() {
-    this.setState(() => ({ showLobby:true,showLogin: false }), this.getUserName);
+    this.setState(
+      () => ({ showLobby: true, showLogin: false }),
+      this.getUserName
+    );
+    //this.getUserName();
   }
 
   handleLoginError() {
@@ -72,6 +77,8 @@ export default class BaseContainer extends React.Component {
               currentUser={this.state.currentUser}
               createNewGameSuccessHandler={this.handleSucceedCreateNewRoom}
               createNewGameErrorHandler={this.handleCreateRoomError}
+              addRoomToUser={this.handleAddRoomToUser}
+              updateMyRoomId={this.updateMyRoomId}
             />
           </div>
 
@@ -91,7 +98,12 @@ export default class BaseContainer extends React.Component {
   getUserName() {
     this.fetchUserInfo()
       .then(userInfo => {
-        this.setState(() => ({ currentUser: userInfo,showLobby:true, showLogin: false }));
+        //console.log("getUserName" + userInfo);
+        this.setState(() => ({
+          currentUser: JSON.parse(userInfo),
+          showLobby: true,
+          showLogin: false
+        }));
       })
       .catch(err => {
         if (err.status === 401) {
@@ -129,11 +141,43 @@ export default class BaseContainer extends React.Component {
   }
 
   handleSucceedCreateNewRoom() {
-    this.setState(() => ({ showLobby: false }), this.getGameRoom);
+    this.setState(() => ({ showLobby: false }));
   }
 
   handleCreateRoomError() {
     console.error("create new room failed");
     this.setState(() => ({ showLobby: true }));
+  }
+
+  updateMyRoomId() {
+    () => {
+      fetch("/games/myRoomId", { method: "GET", credentials: "include" }).then(
+        roomId => {
+          userObj.roomId = roomId;
+          prevState => {
+            let userObj = JSON.parse(JSON.stringify(prevState.currentUser));
+            userObj.roomId = roomId;
+            this.setState({
+              currentUser: JSON.parse(userObj)
+            });
+          };
+        }
+      );
+    };
+  }
+  handleAddRoomToUser() {
+    fetch("/users/addRoom", {
+      method: "POST",
+      body: this.state.currentUser,
+      credentials: "include"
+    }).then(response => {
+      if (response.ok) {
+        console.log("room added to currentUser");
+      } else {
+        if (response.status === 403) {
+          console.log("problem in adding room to curentUser");
+        }
+      }
+    });
   }
 }

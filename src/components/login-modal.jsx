@@ -1,6 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
+class UserData {
+  constructor(i_UserName, i_RoomId = null) {
+    this.name = i_UserName;
+    this.roomId = i_RoomId;
+  }
+}
 export default class LoginModal extends React.Component {
   constructor(props) {
     super(props);
@@ -39,6 +45,8 @@ export default class LoginModal extends React.Component {
   handleLogin(e) {
     e.preventDefault();
     const userName = e.target.elements.userName.value;
+    const userObj = new UserData(userName, null);
+    console.log("handleLogin: userObj"+ JSON.stringify(userObj));
     if (userName === "") {
       this.setState(() => ({
         errMessage: "You must to insert name!"
@@ -46,7 +54,7 @@ export default class LoginModal extends React.Component {
     } else {
       fetch("/users/addUser", {
         method: "POST",
-        body: userName,
+        body: JSON.stringify(userObj),
         credentials: "include"
       }).then(response => {
         if (response.ok) {
