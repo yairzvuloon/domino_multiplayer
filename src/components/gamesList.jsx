@@ -18,9 +18,9 @@ export default class GamesList extends React.Component {
 
   componentWillUnmount() {
     if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-    }
+      (()=>{clearTimeout(this.timeoutId)})();
   }
+}
 
   getGamesList() {
       const interval = 200;//TODO: change to 200 
@@ -40,18 +40,19 @@ export default class GamesList extends React.Component {
         throw err;
       });
   }
+  
 
   
 
   render() {
     return (
-      <div className="gamesList-wrapper">
-        <h2>Games List:</h2>
+      <div key={"gamesList-wrapper"}className="gamesList-wrapper">
+        <h2 key={"gamesList-title"}>Games List:</h2>
         <ul>
       
-          {Object.keys(this.state.gamesList).map(id => (
+          {Object.keys(this.state.gamesList).map((id, index) => (
            
-           <GameObjList key={id} handleJoinToGame={this.props.handleJoinToGame} data={JSON.parse(this.state.gamesList[id])}></GameObjList>
+           <GameObjList key={JSON.parse(this.state.gamesList[id]).gameName+index} handleJoinToGame={this.props.handleJoinToGame} data={JSON.parse(this.state.gamesList[id])}></GameObjList>
            //<li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
         </ul>

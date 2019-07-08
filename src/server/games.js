@@ -40,15 +40,14 @@ function removeGameFromGamesList(req, res, next) {
 }
 
 function removeUserFromGame(req, res, next) {
-  const roomIdObj = getMyRoomId(req);
+  const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
   const index = roomIdObj.subscribesIdStringsIndex;
 
   const gameData = JSON.parse(gamesList[roomId]);
   if (gameData.numberOfSubscribes <= 0) {
     res.sendStatus(401);
-  } 
-  else {
+  } else {
     gameData.subscribesIdStrings.splice(index, 1);
     gameData.numberOfSubscribes--;
     gamesList[roomId] = JSON.stringify(gameData);
@@ -58,24 +57,25 @@ function removeUserFromGame(req, res, next) {
 
 function getMyRoomId(req) {
   if (gamesList[req.session.id] !== undefined) {
-    return { id: req.session.id, subscribesIdStringsIndex: 0 };
+    return JSON.stringify({ id: req.session.id, subscribesIdStringsIndex: 0 });
   } else if (gamesList[req.session.id] === undefined) {
     for (sessionId in gamesList) {
       const gameData = JSON.parse(gamesList[sessionId]);
 
       for (var i = 0; i < gameData.numberOfSubscribes; i++) {
         if (gameData.subscribesIdStrings[i] === req.session.id) {
-          return { id: gameData.id, subscribesIdStringsIndex: i };
+          return JSON.stringify({
+            id: gameData.id,
+            subscribesIdStringsIndex: i
+          });
         }
       }
     }
-  } else {
-    return null;
   }
+  return JSON.stringify({ id: "", subscribesIdStringsIndex: "" });
 }
 
-function isUserHost(userId)
-{
+function isUserHost(userId) {
   return gamesList[userId] !== undefined;
 }
 

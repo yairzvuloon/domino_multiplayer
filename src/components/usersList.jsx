@@ -17,12 +17,14 @@ export default class UsersList extends React.Component {
 
   componentWillUnmount() {
     if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
+      (() => {
+        clearTimeout(this.timeoutId);
+      })();
     }
   }
 
   getUserList() {
-    const interval = 200;//TODO: change to 200
+    const interval = 200; //TODO: change to 200
     return fetch("/users/allUsers", { method: "GET", credentials: "include" })
       .then(response => {
         if (!response.ok) {
@@ -42,11 +44,13 @@ export default class UsersList extends React.Component {
 
   render() {
     return (
-      <div>
-        <h2>/user List11:</h2>
-        <ul>
-          {Object.keys(this.state.usersList).map(id => (
-            <li key={id}>{JSON.parse(this.state.usersList[id]).name}</li>
+      <div key="usersList-Wrapper">
+        <h2 key="usersList-title">users List:</h2>
+        <ul key="usersList-ul">
+          {Object.keys(this.state.usersList).map((id, index) => (
+            <li key={JSON.parse(this.state.usersList[id]).name + index}>
+              {JSON.parse(this.state.usersList[id]).name}
+            </li>
           ))}
         </ul>
       </div>
