@@ -20,9 +20,9 @@ userManagement.post("/addUser", auth.addUserToAuthList, (req, res) => {
   res.sendStatus(200);
 });
 
-userManagement.post("/addRoom", (req, res, next) => {
-  auth.addRoomToUser(req, res, next);
-});
+// userManagement.post("/addRoom", (req, res, next) => {
+//   auth.addRoomToUser(req, res, next);
+// });
 
 userManagement.get("/logout", [
   (req, res, next) => {

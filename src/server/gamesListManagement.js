@@ -11,6 +11,10 @@ gamesListManagement.post("/addGame", games.addGameToGamesList, (req, res) => {
   res.sendStatus(200);
 });
 
+gamesListManagement.post("/addUser",games.addUserToGame, (req, res) => {
+  res.sendStatus(200);
+});
+
 gamesListManagement.get("/allGames", (req, res) => {
   let list = games.getGamesList();
   res.json(list);
@@ -20,4 +24,6 @@ gamesListManagement.get("/myRoomId", (req, res) => {
   let roomId = games.getMyRoomId(req);
   res.json(roomId);
 });
+
+
 module.exports = gamesListManagement;

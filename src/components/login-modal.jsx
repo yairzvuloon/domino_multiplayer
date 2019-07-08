@@ -2,9 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 class UserData {
-  constructor(i_UserName, i_RoomId = null) {
+  constructor(i_UserName) {
     this.name = i_UserName;
-    this.roomId = i_RoomId;
   }
 }
 export default class LoginModal extends React.Component {
@@ -45,7 +44,7 @@ export default class LoginModal extends React.Component {
   handleLogin(e) {
     e.preventDefault();
     const userName = e.target.elements.userName.value;
-    const userObj = new UserData(userName, null);
+    const userObj = new UserData(userName);
     console.log("handleLogin: userObj"+ JSON.stringify(userObj));
     if (userName === "") {
       this.setState(() => ({

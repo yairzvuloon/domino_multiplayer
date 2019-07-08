@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import GameObjList from "./gameObjList.jsx";
 
 export default class GamesList extends React.Component {
   constructor(props) {
@@ -47,8 +48,11 @@ export default class GamesList extends React.Component {
       <div className="gamesList-wrapper">
         <h2>Games List:</h2>
         <ul>
+      
           {Object.keys(this.state.gamesList).map(id => (
-            <li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
+           
+           <GameObjList key={id} data={JSON.parse(this.state.gamesList[id])}></GameObjList>
+           //<li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
         </ul>
       </div>

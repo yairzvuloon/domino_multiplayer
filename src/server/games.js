@@ -57,10 +57,24 @@ function getMyRoomId(req) {
   }
 }
 
+function addUserToGame(req, res, next) {
+  const roomID = req.body;
+  const gameData = JSON.parse(gamesList[roomID]);
+  if (gameData.numberOfSubscribes >= gameData.numPlayerToStart) {
+    res.sendStatus(401);
+  } else {
+    gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
+    gameData.numberOfSubscribes++;
+    gamesList[roomID] = gameData;
+    next();
+  }
+}
+
 module.exports = {
   gameAuthentication,
   addGameToGamesList,
   getGamesList,
   removeGameFromGamesList,
-  getMyRoomId
+  getMyRoomId,
+  addUserToGame
 };
