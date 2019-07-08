@@ -43,15 +43,18 @@ function removeUserFromGame(req, res, next) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
   const index = roomIdObj.subscribesIdStringsIndex;
-
-  const gameData = JSON.parse(gamesList[roomId]);
-  if (gameData.numberOfSubscribes <= 0) {
-    res.sendStatus(401);
-  } else {
-    gameData.subscribesIdStrings.splice(index, 1);
-    gameData.numberOfSubscribes--;
-    gamesList[roomId] = JSON.stringify(gameData);
+  if (roomId === "") {
     next();
+  } else {
+    const gameData = JSON.parse(gamesList[roomId]);
+    if (gameData.numberOfSubscribes <= 0) {
+      res.sendStatus(401);
+    } else {
+      gameData.subscribesIdStrings.splice(index, 1);
+      gameData.numberOfSubscribes--;
+      gamesList[roomId] = JSON.stringify(gameData);
+      next();
+    }
   }
 }
 
