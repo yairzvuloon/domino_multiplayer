@@ -22,7 +22,7 @@ export default class UsersList extends React.Component {
   }
 
   getUserList() {
-    const interval = 10000;//TODO: change to 200
+    const interval = 200;//TODO: change to 200
     return fetch("/users/allUsers", { method: "GET", credentials: "include" })
       .then(response => {
         if (!response.ok) {

@@ -31,6 +31,7 @@ userManagement.get("/logout", [
     next();
   },
   auth.removeUserFromAuthList,
+  games.removeUserFromGame,
   games.removeGameFromGamesList,
   (req, res) => {
     res.sendStatus(200);

@@ -79,9 +79,7 @@ export default class NewGameModal extends React.Component {
           this.props.createNewGameErrorHandler();
         }
       })
-      // .then(()=>this.props.updateMyRoomId())
-      // .then(()=>this.props.addRoomToUser())
-      .then(()=>this.props.createNewGameSuccessHandler());
+      .then(()=>this.props.createNewGameSuccessHandler(gameName));
     return false;
   }
 

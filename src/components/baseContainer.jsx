@@ -15,7 +15,8 @@ export default class BaseContainer extends React.Component {
       showGame: false,
       currentUser: {
         //name: ''
-      }
+      },
+      currentRoomName: null
     };
 
     this.handleSucceededLogin = this.handleSucceededLogin.bind(this);
@@ -26,10 +27,6 @@ export default class BaseContainer extends React.Component {
     this.handleCreateRoomError = this.handleCreateRoomError.bind(this);
     this.fetchUserInfo = this.fetchUserInfo.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
-    // this.handleAddRoomToUser = this.handleAddRoomToUser.bind(this);
-    // this.updateMyRoomId = this.updateMyRoomId.bind(this);
-
-    //this.getUserName();
   }
 
   render() {
@@ -44,7 +41,16 @@ export default class BaseContainer extends React.Component {
       return this.renderLobby();
     } else {
       //rander Game
-      return <h1>game!!!!!</h1>;
+      return (    
+      <div className="user-info-area">
+        Hello {this.state.currentUser.name}
+        <button className="logout btn" onClick={this.logoutHandler}>
+          Logout
+        </button>
+        <h1>Domino multiplayer</h1>
+        <h1>game room name:{this.state.currentRoomName}</h1>
+      </div>
+      );
     }
   }
 
@@ -83,7 +89,7 @@ export default class BaseContainer extends React.Component {
           </div>
 
           <div className="games-list-area">
-            <GamesList />
+            <GamesList handleJoinToGame={this.handleSucceedCreateNewRoom} />
           </div>
 
           <div className="users-list-area">
@@ -140,8 +146,11 @@ export default class BaseContainer extends React.Component {
     );
   }
 
-  handleSucceedCreateNewRoom() {
-    this.setState(() => ({ showLobby: false }));
+  handleSucceedCreateNewRoom(currentRoomName) {
+    this.setState(() => ({
+      currentRoomName: currentRoomName,
+      showLobby: false
+    }));
   }
 
   handleCreateRoomError() {
@@ -173,7 +182,7 @@ export default class BaseContainer extends React.Component {
   //       throw err;
   //     });
   // }
-  
+
   // handleAddRoomToUser() {
   //   console.log("this.state.currentUser"+ JSON.stringify(this.state.currentUser));
   //   fetch("/users/addRoom", {

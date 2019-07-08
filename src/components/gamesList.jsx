@@ -23,7 +23,7 @@ export default class GamesList extends React.Component {
   }
 
   getGamesList() {
-    const interval = 10000;//TODO: change to 200 
+      const interval = 200;//TODO: change to 200 
     return fetch("/games/allGames", { method: "GET", credentials: "include" })
       .then(response => {
         this.timeoutId = setTimeout(this.getGamesList, interval);
@@ -51,7 +51,7 @@ export default class GamesList extends React.Component {
       
           {Object.keys(this.state.gamesList).map(id => (
            
-           <GameObjList key={id} data={JSON.parse(this.state.gamesList[id])}></GameObjList>
+           <GameObjList key={id} handleJoinToGame={this.props.handleJoinToGame} data={JSON.parse(this.state.gamesList[id])}></GameObjList>
            //<li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
         </ul>

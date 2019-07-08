@@ -19,6 +19,7 @@ export default class GameObjList extends React.Component {
   {
     e.preventDefault();
     this.addCurrUserToThisRoom();
+    this.props.handleJoinToGame(this.state.roomName);
   }
 
   addCurrUserToThisRoom()
