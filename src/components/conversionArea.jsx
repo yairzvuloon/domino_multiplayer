@@ -8,15 +8,20 @@ export default class ConversionArea extends React.Component {
     this.state = {
       content: []
     };
-
+    this._isMounted = false;
     this.getChatContent = this.getChatContent.bind(this);
+    this.getChatContentWrapper = this.getChatContentWrapper.bind(this);
   }
 
   componentDidMount() {
-    this.getChatContent();
+    this._isMounted = true;
+    console.log(this.props.isUserConnected);
+    //if (this.props.isUserConnected && this._isMounted === true)
+    if (this._isMounted === true) this.getChatContent();
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
     if (this.timeoutId) {
       (() => {
         clearTimeout(this.timeoutId);
@@ -39,6 +44,9 @@ export default class ConversionArea extends React.Component {
     );
   }
 
+  getChatContentWrapper() {
+    this.getChatContent();
+  }
   getChatContent() {
     const interval = 200; //TODO: change to 200
     return fetch("/chat", { method: "GET", credentials: "include" })
@@ -46,11 +54,11 @@ export default class ConversionArea extends React.Component {
         if (!response.ok) {
           throw response;
         }
-        this.timeoutId = setTimeout(this.getChatContent, interval);
+        this.timeoutId = setTimeout(this.getChatContentWrapper, interval);
         return response.json();
       })
       .then(content => {
-        this.setState(() => ({ content: content }));
+        if (this._isMounted) this.setState(() => ({ content: content }));
       })
       .catch(err => {
         throw err;

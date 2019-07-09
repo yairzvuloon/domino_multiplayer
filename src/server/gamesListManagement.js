@@ -1,6 +1,8 @@
 const express = require("express");
 const games = require("./games");
+const auth =require("./auth")
 const gamesListManagement = express.Router();
+
 
 gamesListManagement.get("/", games.gameAuthentication, (req, res) => {
   const game = games.getGameInfo(req.session.id);
@@ -15,14 +17,14 @@ gamesListManagement.post("/addUser",games.addUserToGame, (req, res) => {
   res.sendStatus(200);
 });
 
-gamesListManagement.get("/allGames", (req, res) => {
+gamesListManagement.get("/allGames",auth.userAuthentication, (req, res) => {
   let list = games.getGamesList();
-  res.json(list);
+  res.status(200).json(list);
 });
 
-gamesListManagement.get("/myRoomId", (req, res) => {
+gamesListManagement.get("/myRoomId",auth.userAuthentication, (req, res) => {
   let roomId = games.getMyRoomId(req);
-  res.json(roomId);
+  res.status(200).json(roomId);
 });
 
 

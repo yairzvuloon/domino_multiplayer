@@ -28,6 +28,9 @@ export default class BaseContainer extends React.Component {
     this.fetchUserInfo = this.fetchUserInfo.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
     this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
+    this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
+
+    this._isMounted = false;
   }
 
   render() {
@@ -112,10 +115,14 @@ export default class BaseContainer extends React.Component {
           </div>
 
           <div key="users-list-area-lobby" className="users-list-area">
-            <UsersList key="UsersList-lobby" />
+            <UsersList
+              key="UsersList-lobby"
+            />
           </div>
         </div>
-        <ChatContainer key="ChatContainer-lobby" />
+        <ChatContainer
+          key="ChatContainer-lobby"
+        />
       </div>
     );
   }
@@ -166,10 +173,17 @@ export default class BaseContainer extends React.Component {
   }
 
   componentDidMount() {
-    this.isCurrUserInRoom();
+    this._isMounted = true;
+    if (
+      this.state.currentUser.name !== undefined &&
+      this.state.currentUser.name !== "" &&
+      this._isMounted === true
+    )
+      this.isCurrUserInRoom();
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
     if (this.timeoutId) {
       (() => {
         clearTimeout(this.timeoutId);
@@ -184,25 +198,34 @@ export default class BaseContainer extends React.Component {
     }));
     this.isCurrUserInRoom();
   }
+  isCurrUserInRoomWrapper() {
+    this.isCurrUserInRoom();
+  }
 
   isCurrUserInRoom() {
     const interval = 200; //TODO: change to 200
-    return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        this.timeoutId = setTimeout(this.isCurrUserInRoom, interval);
-        return response.json();
-      })
-      .then(currRoomId => {
-        if (this.state.showLobby === false && JSON.parse(currRoomId).id === "")
-          this.setState(prevState => ({ showLobby: true }));
-        else return false;
-      })
-      .catch(err => {
-        throw err;
-      });
+    if (this.state.currentUser !== undefined&&this.state.currentUser.name !== "") {
+      return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          this.timeoutId = setTimeout(this.isCurrUserInRoomWrapper, interval);
+          return response.json();
+        })
+        .then(currRoomId => {
+          if (
+            this._isMounted &&
+            this.state.showLobby === false &&
+            JSON.parse(currRoomId).id === ""
+          )
+            this.setState(prevState => ({ showLobby: true }));
+          else return false;
+        })
+        .catch(err => {
+          throw err;
+        });
+    }
   }
 
   handleCreateRoomError() {

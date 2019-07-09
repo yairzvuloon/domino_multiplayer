@@ -1,6 +1,7 @@
 const userList = {};
 
 function userAuthentication(req, res, next) {
+ console.log(JSON.stringify(userList[req.session.id]));
   if (userList[req.session.id] === undefined) {
     res.sendStatus(401);
   } else {

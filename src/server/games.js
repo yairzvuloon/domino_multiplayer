@@ -2,7 +2,7 @@ const gamesList = {};
 
 function gameAuthentication(req, res, next) {
   if (gamesList[req.session.id] === undefined) {
-    res.sendStatus(401);
+    res.sendStatus(401).send("you are not register to looby");
   } else {
     next();
   }
@@ -26,26 +26,22 @@ function addGameToGamesList(req, res, next) {
     next();
   }
 }
-function getGamesList() {
+function getGamesList() { 
   return gamesList;
 }
 
 function removeGameFromGamesList(req, res, next) {
-  if (gamesList[req.session.id] === undefined) {
-    res.status(403).send("game does not exist");
-  } else {
+  if (gamesList[req.session.id] !== undefined) {
     delete gamesList[req.session.id];
-    next();
   }
+  next();
 }
 
 function removeUserFromGame(req, res, next) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
   const index = roomIdObj.subscribesIdStringsIndex;
-  if (roomId === "") {
-    next();
-  } else {
+  if (roomId !== "") {
     const gameData = JSON.parse(gamesList[roomId]);
     if (gameData.numberOfSubscribes <= 0) {
       res.sendStatus(401);
@@ -53,9 +49,9 @@ function removeUserFromGame(req, res, next) {
       gameData.subscribesIdStrings.splice(index, 1);
       gameData.numberOfSubscribes--;
       gamesList[roomId] = JSON.stringify(gameData);
-      next();
     }
   }
+  next();
 }
 
 function getMyRoomId(req) {

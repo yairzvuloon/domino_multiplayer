@@ -30,9 +30,9 @@ userManagement.get("/logout", [
     chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
-  auth.removeUserFromAuthList,
   games.removeUserFromGame,
   games.removeGameFromGamesList,
+  auth.removeUserFromAuthList,
   (req, res) => {
     res.sendStatus(200);
   }

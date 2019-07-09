@@ -9,18 +9,28 @@ export default class UsersList extends React.Component {
       usersList: {}
     };
     this.getUserList = this.getUserList.bind(this);
+    this.getUserListWrapper = this.getUserListWrapper.bind(this);
+
+    this._isMounted = false;
   }
 
   componentDidMount() {
-    this.getUserList();
+    this._isMounted = true;
+    //if (this.props.isUserConnected&&this._isMounted === true) this.getUserList();
+
+    if (this._isMounted === true) this.getUserList();
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
     if (this.timeoutId) {
       (() => {
         clearTimeout(this.timeoutId);
       })();
     }
+  }
+  getUserListWrapper() {
+    this.getUserList();
   }
 
   getUserList() {
@@ -31,10 +41,11 @@ export default class UsersList extends React.Component {
           throw response;
         }
 
-        this.timeoutId = setTimeout(this.getUserList, interval);
+        this.timeoutId = setTimeout(this.getUserListWrapper, interval);
         return response.json();
       })
       .then(usersList => {
+       if(this._isMounted)
         this.setState(() => ({ usersList }));
       })
       .catch(err => {
