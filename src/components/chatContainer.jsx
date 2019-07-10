@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import ConversionArea from "./conversionArea.jsx";
-import ChatInput from "./chatInput.jsx";
+import ConversionArea from "./ConversionArea.jsx";
+import ChatInput from "./ChatInput.jsx";
 
 export default class ChatContainer extends React.Component {
   constructor(props) {

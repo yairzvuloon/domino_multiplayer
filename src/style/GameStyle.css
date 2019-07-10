@@ -1,0 +1,33 @@
+#homeContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+#boardFrame {
+  width: 100vw;
+  height: 23vw;
+  overflow: scroll;
+  /*margin-left: 100%;
+margin-right: 100%;*/
+}
+#cartFrame {
+  max-width: 50vw;
+  width: 50vw;
+  overflow: scroll;
+}
+#cartStyle {
+  max-width: 10vw;
+  width: 10vw;
+  height: 3vw;
+}
+
+#statistics {
+  max-width: 10vw;
+  width: 10vw;
+  height: 3vw;
+}

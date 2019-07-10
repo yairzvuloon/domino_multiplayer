@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import GameObjList from "./gameObjList.jsx";
+import GameObjList from "./GameObjList.jsx";
 
 export default class GamesList extends React.Component {
   constructor(props) {
