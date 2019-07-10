@@ -53,6 +53,20 @@ export default class Game extends React.Component {
     super(props);
     this.state = getInitialState();
 
+    //this.restartGame = this.restartGame.bind(this);
+
+    //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
+    //this.getTurnDuration = this.getTurnDuration.bind(this);
+    //this.removeAllValidNeighbors = this.removeAllValidNeighbors.bind(this);
+    //this.cleanAllFlags = this.cleanAllFlags.bind(this);
+    //this.getNextAverageTurn = this.getNextAverageTurn.bind(this);
+    //this.getAverageDiffInSecs = this.getAverageDiffInSecs.bind(this);
+    //this.isValidCell = this.isValidCell.bind(this);
+    //this.isNotEmpty = this.isNotEmpty.bind(this);
+    //this.resetBoard = this.resetBoard.bind(this);
+    //this.isTheFirstPiece = this.isTheFirstPiece.bind(this);
+    // this.isJoker = this.isJoker.bind(this);
+
     this.isGameRunning = true;
     this.isWin = false;
     this.cartEmptyFlag = false;
@@ -101,7 +115,7 @@ export default class Game extends React.Component {
         <div id="boardFrame">
           <Board
             cells={this.state.boardMap}
-            //onClick={(i, j) => this.handleBoardClick(i, j)}
+            onClick={(i, j) => this.handleBoardClick(i, j)}
           />
         </div>
         <div id="cartFrame">
@@ -147,10 +161,10 @@ export default class Game extends React.Component {
         const obj = this.getUpdatedCart([...prevState.cartMap], indexCart);
         const cartMap = obj.cartMap;
         const turn = obj.turn;
-       /////////////////////////////////////////////////
-       //I need to get the withdrawals from server!! //
-       ///////////////////////////////////////////////
-       const withdrawals=0;
+        /////////////////////////////////////////////////
+        //I need to get the withdrawals from server!! //
+        ///////////////////////////////////////////////
+        const withdrawals = 0;
         // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
         // if (DominoStackLogic.getNumOfPieces() === 0) {
         //   this.isGameRunning = false;
@@ -173,9 +187,9 @@ export default class Game extends React.Component {
     }
     cartMap[indexCart].valid = true;
     let numOfTurnsToAdd = 0;
-   /////////////////////////////////////////////////////////////////////////////
-   //automatic draw cards, I must to decide if to create button for get card.//
-   ///////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    //automatic draw cards, I must to decide if to create button for get card.//
+    ///////////////////////////////////////////////////////////////////////////
 
     // while (
     //   !this.isTheFirstTurn() &&
@@ -211,42 +225,208 @@ export default class Game extends React.Component {
   updateValidCellsInBoard(board, card, booleanVal) {
     const { side1, side2 } = card;
 
-    return fetch("/games/getValidLocations", { method: "GET", credentials: "include" })
-    .then(response => {
-      if (!response.ok) {
-        throw response;
-      }
-      return response.json();
+    return fetch("/games/getValidLocations", {
+      method: "GET",
+      credentials: "include"
     })
-    .then(validLocationsArrayText => {
-     const validLocationsArray=JSON.parse(validLocationsArrayText).validLocationsArray;
-      
-      for (let col = 0; col < validLocationsArray[side1].length; col++) {
-        this.toggleCellValid(
-          board,
-          validLocationsArray[side1][col].i,
-          validLocationsArray[side1][col].j,
-          booleanVal
-        );
-      }
-  
-      for (let col = 0; col < validLocationsArray[side2].length; col++) {
-        this.toggleCellValid(
-          board,
-         validLocationsArray[side2][col].i,
-         validLocationsArray[side2][col].j,
-          booleanVal
-        );
-      }
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
+      })
+      .then(validLocationsArrayText => {
+        const validLocationsArray = JSON.parse(validLocationsArrayText)
+          .validLocationsArray;
 
-    });
-   
+        for (let col = 0; col < validLocationsArray[side1].length; col++) {
+          this.toggleCellValid(
+            board,
+            validLocationsArray[side1][col].i,
+            validLocationsArray[side1][col].j,
+            booleanVal
+          );
+        }
 
-    
+        for (let col = 0; col < validLocationsArray[side2].length; col++) {
+          this.toggleCellValid(
+            board,
+            validLocationsArray[side2][col].i,
+            validLocationsArray[side2][col].j,
+            booleanVal
+          );
+        }
+      });
   }
 
   toggleCellValid(board, row, col, booleanVal) {
     board[row][col].valid = booleanVal;
   }
+
+  handleBoardClick(row, col) {
+    this.runMove(row, col);
+  }
+
+  runMove(row, col) {
+    const { boardMap } = this.state;
+
+    if (this.state.selectedCard) {
+      const { side1, side2 } = this.state.selectedCard["value"];
+      //need to fix it for stats//
+      ///////////////////////////
+      //let averageTurnInSecsToAdd = this.getAverageDiffInSecs();
+
+      let neighborsObj = this.getNeighborsObj(row, col);
+      let card = new Card(false, side1, side2, true);
+
+      const neighborName = Object.keys(neighborsObj).filter(function(row) {
+        return neighborsObj[row] !== null;
+      });
+      const neighborLocation = neighborsObj[neighborName];
+
+      if (neighborLocation) {
+        let piece = boardMap[neighborLocation.row][neighborLocation.col];
+        card = this.createPiece(neighborName[0], piece, side1, side2);
+      }
+
+      this.locatePieceOnBoard(row, col, card);
+    }
+  }
+
+  getNeighborsObj(row, col) {
+    let neighborsObj = new NeighborsObj(
+      this.checkNeighborPiece(row - 1, col),
+      this.checkNeighborPiece(row + 1, col),
+      this.checkNeighborPiece(row, col - 1),
+      this.checkNeighborPiece(row, col + 1)
+    );
+    return neighborsObj;
+  }
+
+  checkNeighborPiece(row, col) {
+    const { boardMap } = this.state;
+    let obj = null;
+    if (this.state.selectedCard) {
+      const { side1, side2 } = this.state.selectedCard["value"];
+
+      if (
+        boardMap[row][col].side1 === side1 ||
+        boardMap[row][col].side2 === side2 ||
+        boardMap[row][col].side1 === side2 ||
+        boardMap[row][col].side2 === side1
+      ) {
+        obj = { row: row, col: col };
+      }
+    }
+    return obj;
+  }
+
+  createPiece(neighborName, neighborPiece, side1, side2) {
+    let position = this.selectPosition(neighborName, neighborPiece);
+
+    let card = new Card(false, side1, side2, position);
+
+    if (this.checkPiecePosition(neighborName, neighborPiece, side1, side2)) {
+      card = new Card(false, side2, side1, position);
+    }
+
+    return card;
+  }
+
+  checkPiecePosition(neighborName, neighborPiece, side1, side2) {
+    return (
+      (side1 === neighborPiece.side1 &&
+        (neighborName === "down" || neighborName === "right")) ||
+      (side2 === neighborPiece.side2 &&
+        (neighborName === "up" || neighborName === "left"))
+    );
+  }
+
+  locatePieceOnBoard(row, col, card) {
+    if (card.side1 === card.side2) {
+      card.isLaying = !card.isLaying;
+    }
+   //it's must to be in server side (the 2 rows below):
+    //this.removeValidLocation(row, col, card);
+   // this.updateValidLocationsByNumber(row, col, card);
+    
+    this.removePieceFromCart();
+
+    let scoreAddition = card.side1 + card.side2;
+    this.isTimerResetNeeded = false;
+   // const average = this.calculateAverageOfTurn();
+    this.setState(prevState => {
+      const newBoardMap = this.getUpdatedBoard(
+        [...prevState.boardMap],
+        card,
+        row,
+        col
+      );
+     ////////////////////////////
+      //complete that!!!!!///////
+      //////////////////////////
+      // const newScore = this.getUpdatedScore(
+      //   prevState.currentScore,
+      //   scoreAddition
+      // );
+      const newTurn = prevState.turn + 1;
+      return {
+        boardMap: newBoardMap,
+        //currentScore: newScore,
+        turn: newTurn
+        //average: average
+      };
+    });
+  }
+
+  removePieceFromCart() {
+    const { index } = this.state.selectedCard;
+    this.setState(prevState => {
+      const newCartMap = this.getCartMapAfterRemoveCard(
+        index,
+        prevState.cartMap
+      );
+      if (this.isCartEmpty()) {
+        this.isGameRunning = false;
+        this.isWin = true;
+      }
+      return {
+        cartMap: newCartMap
+      };
+    });
+  }
+
+  getCartMapAfterRemoveCard(index, cartMap) {
+    cartMap[index] = new Card(false);
+    return cartMap;
+  }
+
+  isCartEmpty() {
+    const { cartMap } = this.state;
+    const { index } = this.state.selectedCard;
+    let isEmpty = true;
+    for (let i = 0; i < cartMap.length; i++) {
+      if (i !== index && cartMap[i].side1 !== undefined) {
+        isEmpty = false;
+      }
+    }
+    return isEmpty;
+  }
+
+  getCartAfterAddPiece(cart, card, indexCart) {
+    card.valid = undefined;
+    cart[indexCart] = card;
+    return cart;
+  }
+
+  getUpdatedBoard(board, card, row, col) {
+    board[row][col] = card;
+    this.updateValidCellsInBoard(board, card, false);
+    return board;
+  }
+
+  
+
+
 
 }
