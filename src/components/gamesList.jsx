@@ -44,7 +44,7 @@ export default class GamesList extends React.Component {
         return response.json();
       })
       .then(gamesList => {
-        if (this._isMounted) this.setState(() => ({ gamesList }));
+        if (this._isMounted) this.setState(() => ({ gamesList:JSON.parse(gamesList) }));
       })
       .catch(err => {
         throw err;
@@ -58,9 +58,9 @@ export default class GamesList extends React.Component {
         <ul>
           {Object.keys(this.state.gamesList).map((id, index) => (
             <GameObjList
-              key={JSON.parse(this.state.gamesList[id]).gameName + index}
+              key={"key"+index}
               handleJoinToGame={this.props.handleJoinToGame}
-              data={JSON.parse(this.state.gamesList[id])}
+              data={this.state.gamesList[id]}
             />
             //<li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
