@@ -6,6 +6,8 @@ import UsersList from "./UsersList.jsx";
 import GamesList from "./GamesList.jsx";
 import NewGameModal from "./NewGameModal.jsx";
 import Game from "./Game.jsx";
+import "../style/GameStyle.css";
+
 
 export default class BaseContainer extends React.Component {
   constructor(props) {

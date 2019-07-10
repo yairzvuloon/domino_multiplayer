@@ -102,13 +102,35 @@ function addGameToGamesList(req, res, next) {
     obj.id = req.session.id;
     obj.subscribesIdStrings[0] = req.session.id;
     obj.DominoStackLogic = new DominoStack();
+    obj.validLocationsArray= createEmptyValidLocations();
     gamesList[req.session.id] = obj;
     next();
   }
 }
 function getGamesList() {
- 
   return JSON.stringify(gamesList);
+}
+
+function getValidLocations(req, res, next)
+{
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+
+  return JSON.stringify({validLocationsArray: gameData.validLocationsArray})
+
+  // for (let i = 0; i < gameData.validLocationsArray[side1].length; i++) {
+   
+  // }
+
+  // for (let j = 0; j < gameData.validLocationsArray[side2].length; j++) {
+  //   this.toggleCellValid(
+  //     board,
+  //     this.validLocationsArray[side2][col].i,
+  //     this.validLocationsArray[side2][col].j,
+  //     booleanVal
+  //   );
+  // }
+
 }
 
 function removeGameFromGamesList(req, res, next) {
@@ -161,7 +183,7 @@ function isUserHost(userId) {
   return gamesList[userId] !== undefined;
 }
 
-function isUserInRoom(req,res, next) {
+function isUserInRoom(req, res, next) {
   if (JSON.parse(getMyRoomId(req).id === "")) {
     res.sendStatus(401);
   }
@@ -170,7 +192,7 @@ function isUserInRoom(req,res, next) {
 
 function addUserToGame(req, res, next) {
   const roomID = req.body;
-  const gameData =gamesList[roomID];
+  const gameData = gamesList[roomID];
   if (gameData.numberOfSubscribes >= gameData.numPlayerToStart) {
     res.sendStatus(401);
   } else {
@@ -185,9 +207,17 @@ function addUserToGame(req, res, next) {
 }
 
 function getNewCart(req, res, next) {
-  const roomId=JSON.parse(getMyRoomId(req)).id;
-  const gameData =gamesList[roomId];
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
   return gameData.DominoStackLogic.setInitialCart();
+}
+
+function createEmptyValidLocations() {
+  let matrix = new Array(7);
+  for (let i = 0; i < 7; i++) {
+    matrix[i] = new Array(0);
+  }
+  return matrix;
 }
 
 module.exports = {
@@ -199,5 +229,6 @@ module.exports = {
   getMyRoomId,
   addUserToGame,
   isUserInRoom,
-  getNewCart
+  getNewCart,
+  getValidLocations
 };

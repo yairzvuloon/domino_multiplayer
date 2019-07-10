@@ -31,7 +31,17 @@ gamesListManagement.get(
   auth.userAuthentication,
   games.isUserInRoom,
   (req, res) => {
-    let list = games.getNewCart(req);
+    let cart = games.getNewCart(req);
+    res.status(200).json(cart);
+  }
+);
+
+gamesListManagement.get(
+  "/getValidLocations",
+  auth.userAuthentication,
+  games.isUserInRoom,
+  (req, res) => {
+    let list = games.getValidLocations(req);
     res.status(200).json(list);
   }
 );
