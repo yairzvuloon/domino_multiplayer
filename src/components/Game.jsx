@@ -9,10 +9,10 @@ import "../style/GameStyle.css";
 
 const getInitialState = () => {
   const initialBoard = Manager.setInitialBoard(57);
-const initialValidLocation = createEmptyValidLocations();
+  const initialValidLocation = Manager.createEmptyValidLocations();
   const initialState = {
     boardMap: initialBoard,
-    validLocationsArray:initialValidLocation,
+    validLocationsArray: initialValidLocation,
     cartMap: [],
     selectedCard: null,
     currentScore: 0,
@@ -139,10 +139,29 @@ export default class Game extends React.Component {
       });
   }
 
+  componentDidUpdate() {
+    return fetch("/games/getValidLocations", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
+      })
+      .then(validLocationsArrayText => {
+        const validLocationsArray = JSON.parse(validLocationsArrayText)
+          .validLocationsArray;
+        this.setState(() => ({ validLocationsArray: validLocationsArray }));
+      });
+  }
+  /////////////////////////////////////////////////
   handleCartClick(indexCart, card) {
     if (this.isGameRunning) {
       console.log("clicked" + indexCart);
       this.isTimerResetNeeded = false;
+      //////////////////////////////////////////////////
       this.setState(prevState => {
         const boardMap = this.getBoardWithSignsCells(
           [...prevState.boardMap],
@@ -198,7 +217,7 @@ export default class Game extends React.Component {
       turn: this.state.turn + numOfTurnsToAdd
     };
   }
-
+  /////////////////////////////////////
   getBoardWithSignsCells(board, card) {
     if (this.state.selectedCard !== null) {
       let prevSelectedCard = this.state.selectedCard["value"];
@@ -207,88 +226,88 @@ export default class Game extends React.Component {
     this.updateValidCellsInBoard(board, card, true);
     return board;
   }
+  /////////////////////////////
+  // fetchAndSetBoardWithSignsCells(board, card) {
+  //   //fetch only one time, and send validLocationsArray that getted from the fetch tw
 
-  fetchAndSetBoardWithSignsCells(board, card) {
-    //fetch only one time, and send validLocationsArray that getted from the fetch tw
+  //   return fetch("/games/getValidLocations", {
+  //     method: "GET",
+  //     credentials: "include"
+  //   })
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw response;
+  //       }
+  //       return response.json();
+  //     })
+  //     .then(validLocationsArrayText => {
+  //       const validLocationsArray = JSON.parse(validLocationsArrayText)
+  //         .validLocationsArray;
 
-    return fetch("/games/getValidLocations", {
-      method: "GET",
-      credentials: "include"
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        return response.json();
-      })
-      .then(validLocationsArrayText => {
-        const validLocationsArray = JSON.parse(validLocationsArrayText)
-          .validLocationsArray;
-
-        this.setState(prevState => {
-          const boardMap = this.getBoard(
-            validLocationsArray,
-            [...prevState.boardMap],
-            card
-          );
-          const obj = this.getUpdatedCart([...prevState.cartMap], indexCart);
-          const cartMap = obj.cartMap;
-          const turn = obj.turn;
-          /////////////////////////////////////////////////
-          //I need to get the withdrawals from server!! //
-          ///////////////////////////////////////////////
-          const withdrawals = 0;
-          // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
-          // if (DominoStackLogic.getNumOfPieces() === 0) {
-          //   this.isGameRunning = false;
-          //   this.isWin = false;
-          // }
-          return {
-            boardMap: boardMap,
-            cartMap: cartMap,
-            selectedCard: { value: card, index: indexCart },
-            turn: turn,
-            withdrawals: withdrawals
-          };
-        });
-      });
-  }
+  //       this.setState(prevState => {
+  //         const boardMap = this.getBoard(
+  //           validLocationsArray,
+  //           [...prevState.boardMap],
+  //           card
+  //         );
+  //         const obj = this.getUpdatedCart([...prevState.cartMap], indexCart);
+  //         const cartMap = obj.cartMap;
+  //         const turn = obj.turn;
+  //         /////////////////////////////////////////////////
+  //         //I need to get the withdrawals from server!! //
+  //         ///////////////////////////////////////////////
+  //         const withdrawals = 0;
+  //         // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
+  //         // if (DominoStackLogic.getNumOfPieces() === 0) {
+  //         //   this.isGameRunning = false;
+  //         //   this.isWin = false;
+  //         // }
+  //         return {
+  //           boardMap: boardMap,
+  //           cartMap: cartMap,
+  //           selectedCard: { value: card, index: indexCart },
+  //           turn: turn,
+  //           withdrawals: withdrawals
+  //         };
+  //       });
+  //     });
+  // }
 
   toggleCellValid(board, row, col, booleanVal) {
     board[row][col].valid = booleanVal;
   }
-
-  getBoard(validLocationsArray, board, card) {
-    if (this.state.selectedCard !== null) {
-      let prevSelectedCard = this.state.selectedCard["value"];
-      this.updateValidCellsInBoard(
-        validLocationsArray,
-        board,
-        prevSelectedCard,
-        false
-      );
-    }
-    this.updateValidCellsInBoard(validLocationsArray, board, card, true);
-    return board;
-  }
-
-  updateValidCellsInBoard(validLocationsArray, board, card, booleanVal) {
+  ///////////////////////////////////////////////////////
+  // getBoard(validLocationsArray, board, card) {
+  //   if (this.state.selectedCard !== null) {
+  //     let prevSelectedCard = this.state.selectedCard["value"];
+  //     this.updateValidCellsInBoard(
+  //       validLocationsArray,
+  //       board,
+  //       prevSelectedCard,
+  //       false
+  //     );
+  //   }
+  //   this.updateValidCellsInBoard(board, card, true);
+  //   return board;
+  // }
+  /////////////////////////////////////////////////////
+  updateValidCellsInBoard(board, card, booleanVal) {
     const { side1, side2 } = card;
 
-    for (let col = 0; col < validLocationsArray[side1].length; col++) {
+    for (let col = 0; col < this.state.validLocationsArray[side1].length; col++) {
       this.toggleCellValid(
         board,
-        validLocationsArray[side1][col].i,
-        validLocationsArray[side1][col].j,
+        this.state.validLocationsArray[side1][col].i,
+        this.state.validLocationsArray[side1][col].j,
         booleanVal
       );
     }
 
-    for (let col = 0; col < validLocationsArray[side2].length; col++) {
+    for (let col = 0; col < this.state.validLocationsArray[side2].length; col++) {
       this.toggleCellValid(
         board,
-        validLocationsArray[side2][col].i,
-        validLocationsArray[side2][col].j,
+        this.state.validLocationsArray[side2][col].i,
+        this.state.validLocationsArray[side2][col].j,
         booleanVal
       );
     }
@@ -538,13 +557,7 @@ export default class Game extends React.Component {
     );
   }
 
-  createEmptyValidLocations() {
-    let matrix = new Array(7);
-    for (let i = 0; i < 7; i++) {
-      matrix[i] = new Array(0);
-    }
-    return matrix;
-  }
+  
 
   // removeValidLocation(row, col, card) {
   //   let length1 = this.validLocationsArray[card.side1].length;

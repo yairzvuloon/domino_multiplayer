@@ -251,14 +251,16 @@ function removeValidLocation(roomId, row, col, card) {
   let output2 = Manager.removeRowColElementFromArray(arr2, row, col);
 
   if (output1) {
-    gameData.validLocationsArray[card.side1] = new Array(output1.length);
+    length1--;
+    gameData.validLocationsArray[card.side1] = new Array(length1);
     for (let i = 0; i < length1; i++) {
       gameData.validLocationsArray[card.side1] = arr1[i];
     }
   }
 
   if (output2) {
-    gameData.validLocationsArray[card.side2] = new Array(output2.length);
+    length2--;
+    gameData.validLocationsArray[card.side2] = new Array(length2);
     for (let i = 0; i < length2; i++) {
       gameData.validLocationsArray[card.side2][i] = arr2[i];
     }

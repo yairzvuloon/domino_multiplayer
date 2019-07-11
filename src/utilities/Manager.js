@@ -75,7 +75,7 @@ class DominoStack {
     this.numberOfDrawnFromStack = -7;
   }
 }
- class Card {
+class Card {
   constructor(i_Valid, i_Side1, i_Side2, i_IsLaying) {
     this.valid = i_Valid;
     this.side1 = i_Side1;
@@ -84,7 +84,7 @@ class DominoStack {
   }
 }
 
- class StatsObj {
+class StatsObj {
   constructor(withdrawals, turns, scoreToAdd, turnLength, averageTurn) {
     this.withdrawals = withdrawals;
     this.turns = turns;
@@ -93,7 +93,6 @@ class DominoStack {
     this.averageTurnInSecsToAdd = averageTurn;
   }
 }
-
 
 ////////client
 const createEmptyBoard = size => {
@@ -108,7 +107,7 @@ const createEmptyBoard = size => {
 };
 ////////
 ////////client
- const setInitialBoard = size => {
+const setInitialBoard = size => {
   let board = createEmptyBoard(size);
   let mid = Math.floor(size / 2);
   board[mid][mid].valid = true;
@@ -124,7 +123,7 @@ const createEmptyBoard = size => {
 //   return cart;
 // };
 
- const secondsToTime = secs => {
+const secondsToTime = secs => {
   let divisor_for_minutes = secs % (60 * 60);
   let minutes = Math.floor(divisor_for_minutes / 60);
 
@@ -138,27 +137,34 @@ const createEmptyBoard = size => {
   return obj;
 };
 
- const removeRowColElementFromArray = (arr, row, col) => {
+const removeRowColElementFromArray = (arr, row, col) => {
   let val = false;
   for (var idx = 0; idx < arr.length; idx++)
     if (arr[idx].i === row && arr[idx].j === col) {
       val = arr[idx].i === row && arr[idx].j === col;
       arr.splice(idx, 1);
       break;
-    } 
+    }
   return val;
 };
 
- const getCartAfterRemovePiece = (cart, indexCart) => {
+const getCartAfterRemovePiece = (cart, indexCart) => {
   cart[indexCart] = new Card(false);
-  const result = cart.filter(el => el.valid ===false);
+  const result = cart.filter(el => el.valid === false);
 
   return result;
 };
 
+const createEmptyValidLocations = () => {
+  let matrix = new Array(7);
+  for (let i = 0; i < 7; i++) {
+    matrix[i] = new Array(0);
+  }
+  return matrix;
+};
 
 ////////client
- const createCopyRow = (matrix, i_Row) => {
+const createCopyRow = (matrix, i_Row) => {
   let size = 0;
   if (matrix[i_Row]) size = matrix[i_Row].length;
 
@@ -169,7 +175,7 @@ const createEmptyBoard = size => {
   return array;
 };
 /////
- class NeighborsObj {
+class NeighborsObj {
   constructor(up, down, left, right) {
     this.up = up;
     this.down = down;
@@ -187,5 +193,6 @@ module.exports = {
   DominoStack,
   secondsToTime,
   removeRowColElementFromArray,
-  createCopyRow
-}
+  createCopyRow,
+  createEmptyValidLocations
+};
