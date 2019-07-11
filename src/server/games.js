@@ -1,80 +1,81 @@
-class DominoStack {
-  constructor() {
-    this.piecesAmount = 28;
-    this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
-    this.indexesCardsBoxIndex = this.piecesAmount - 1;
-    this.cardsArray = this.createCardsArray();
-    //because of the initial state of stack
-    this.numberOfDrawnFromStack = -7;
-    this.getNumOfWithdrawals = this.getNumOfWithdrawals.bind(this);
-    this.getNumOfPieces = this.getNumOfPieces.bind(this);
-    this.reset = this.reset.bind(this);
-  }
+const Manager = require("../utilities/Manager");
+// class DominoStack {
+//   constructor() {
+//     this.piecesAmount = 28;
+//     this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
+//     this.indexesCardsBoxIndex = this.piecesAmount - 1;
+//     this.cardsArray = this.createCardsArray();
+//     //because of the initial state of stack
+//     this.numberOfDrawnFromStack = -7;
+//     this.getNumOfWithdrawals = this.getNumOfWithdrawals.bind(this);
+//     this.getNumOfPieces = this.getNumOfPieces.bind(this);
+//     this.reset = this.reset.bind(this);
+//   }
 
-  getNumOfWithdrawals() {
-    return this.numberOfDrawnFromStack;
-  }
+//   getNumOfWithdrawals() {
+//     return this.numberOfDrawnFromStack;
+//   }
 
-  getNumOfPieces() {
-    return this.piecesAmount;
-  }
+//   getNumOfPieces() {
+//     return this.piecesAmount;
+//   }
 
-  getCard() {
-    let ret = null;
-    if (this.piecesAmount > 0) {
-      this.numberOfDrawnFromStack++;
-      this.piecesAmount--;
-      let cardIndex = this.indexesCardsBox.pop();
-      ret = this.cardsArray[cardIndex];
-      this.indexesCardsBoxIndex--;
-      console.log("in getCard()");
-      console.log("card: " + ret.side1 + ", " + ret.side2);
-    }
-    return ret;
-  }
+//   getCard() {
+//     let ret = null;
+//     if (this.piecesAmount > 0) {
+//       this.numberOfDrawnFromStack++;
+//       this.piecesAmount--;
+//       let cardIndex = this.indexesCardsBox.pop();
+//       ret = this.cardsArray[cardIndex];
+//       this.indexesCardsBoxIndex--;
+//       console.log("in getCard()");
+//       console.log("card: " + ret.side1 + ", " + ret.side2);
+//     }
+//     return ret;
+//   }
 
-  createShuffledArray(size) {
-    let a = new Array(size);
-    for (let i = 0; i < size; i++) {
-      a[i] = i;
-    }
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+//   createShuffledArray(size) {
+//     let a = new Array(size);
+//     for (let i = 0; i < size; i++) {
+//       a[i] = i;
+//     }
+//     for (let i = a.length - 1; i > 0; i--) {
+//       const j = Math.floor(Math.random() * (i + 1));
+//       [a[i], a[j]] = [a[j], a[i]];
+//     }
+//     return a;
+//   }
 
-  createCardsArray() {
-    let arr = new Array(28);
-    let arrIndex = 0;
-    for (let i = 0; i < 7; i++) {
-      for (let j = i; j < 7; j++) {
-        arr[arrIndex] = { valid: undefined, side1: i, side2: j };
-        console.log(arr[arrIndex]);
-        arrIndex++;
-      }
-    }
-    return arr;
-  }
+//   createCardsArray() {
+//     let arr = new Array(28);
+//     let arrIndex = 0;
+//     for (let i = 0; i < 7; i++) {
+//       for (let j = i; j < 7; j++) {
+//         arr[arrIndex] = { valid: undefined, side1: i, side2: j };
+//         console.log(arr[arrIndex]);
+//         arrIndex++;
+//       }
+//     }
+//     return arr;
+//   }
 
-  setInitialCart() {
-    let cart = new Array(7);
-    for (let i = 0; i < 7; i++) {
-      cart[i] = this.getCard();
-    }
-    return JSON.stringify({ cart: cart });
-  }
+//   setInitialCart() {
+//     let cart = new Array(7);
+//     for (let i = 0; i < 7; i++) {
+//       cart[i] = this.getCard();
+//     }
+//     return JSON.stringify({ cart: cart });
+//   }
 
-  reset() {
-    this.piecesAmount = 28;
-    this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
-    this.indexesCardsBoxIndex = this.piecesAmount - 1;
-    this.cardsArray = this.createCardsArray();
-    //because of the initial state of stack
-    this.numberOfDrawnFromStack = -7;
-  }
-}
+//   reset() {
+//     this.piecesAmount = 28;
+//     this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
+//     this.indexesCardsBoxIndex = this.piecesAmount - 1;
+//     this.cardsArray = this.createCardsArray();
+//     //because of the initial state of stack
+//     this.numberOfDrawnFromStack = -7;
+//   }
+// }
 
 const gamesList = {};
 
@@ -101,8 +102,8 @@ function addGameToGamesList(req, res, next) {
     const obj = JSON.parse(req.body);
     obj.id = req.session.id;
     obj.subscribesIdStrings[0] = req.session.id;
-    obj.DominoStackLogic = new DominoStack();
-    obj.validLocationsArray= createEmptyValidLocations();
+    obj.DominoStackLogic = new Manager.DominoStack();
+    obj.validLocationsArray = createEmptyValidLocations();
     gamesList[req.session.id] = obj;
     next();
   }
@@ -111,15 +112,14 @@ function getGamesList() {
   return JSON.stringify(gamesList);
 }
 
-function getValidLocations(req, res, next)
-{
+function getValidLocations(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
 
-  return JSON.stringify({validLocationsArray: gameData.validLocationsArray})
+  return JSON.stringify({ validLocationsArray: gameData.validLocationsArray });
 
   // for (let i = 0; i < gameData.validLocationsArray[side1].length; i++) {
-   
+
   // }
 
   // for (let j = 0; j < gameData.validLocationsArray[side2].length; j++) {
@@ -130,7 +130,6 @@ function getValidLocations(req, res, next)
   //     booleanVal
   //   );
   // }
-
 }
 
 function removeGameFromGamesList(req, res, next) {
@@ -220,6 +219,52 @@ function createEmptyValidLocations() {
   return matrix;
 }
 
+function updateValidLocations(req, res, next) {
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+  const reqBodyObj = JSON.parse(req.body);
+  const card = reqBodyObj.card;
+  const row = reqBodyObj.row;
+  const col = reqBodyObj.col;
+  const side1Array = reqBodyObj.side1Array;
+  const side2Array = reqBodyObj.side2Array;
+  removeValidLocation(roomId, row, col, card);
+
+  for (let i = 0; i < side1Array.length; i++) {
+    gameData.validLocationsArray[card.side1].push(side1Array[i]);
+  }
+
+  for (let i = 0; i < side2Array.length; i++) {
+  gameData.validLocationsArray[card.side2].push(side2Array[i]);
+  }
+  next();
+}
+
+function removeValidLocation(roomId, row, col, card) {
+  const gameData = gamesList[roomId];
+
+  let length1 = gameData.validLocationsArray[card.side1].length;
+  let length2 = gameData.validLocationsArray[card.side2].length;
+  let arr1 = Manager.createCopyRow(gameData.validLocationsArray, card.side1);
+  let arr2 = Manager.createCopyRow(gameData.validLocationsArray, card.side2);
+  let output1 = Manager.removeRowColElementFromArray(arr1, row, col);
+  let output2 = Manager.removeRowColElementFromArray(arr2, row, col);
+
+  if (output1) {
+    gameData.validLocationsArray[card.side1] = new Array(output1.length);
+    for (let i = 0; i < length1; i++) {
+      gameData.validLocationsArray[card.side1] = arr1[i];
+    }
+  }
+
+  if (output2) {
+    gameData.validLocationsArray[card.side2] = new Array(output2.length);
+    for (let i = 0; i < length2; i++) {
+      gameData.validLocationsArray[card.side2][i] = arr2[i];
+    }
+  }
+}
+
 module.exports = {
   gameAuthentication,
   addGameToGamesList,
@@ -230,5 +275,6 @@ module.exports = {
   addUserToGame,
   isUserInRoom,
   getNewCart,
-  getValidLocations
+  getValidLocations,
+  updateValidLocations
 };

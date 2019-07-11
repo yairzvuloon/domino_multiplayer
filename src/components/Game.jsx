@@ -4,25 +4,15 @@ import Board from "../components/Board.jsx";
 import Cart from "../components/Cart.jsx";
 import Timer from "../components/Timer.jsx";
 import Stats from "../components/Stats.jsx";
-import {
-  Card,
-  NeighborsObj,
-  StatsObj,
-  setInitialBoard,
-  //setInitialCart,
-  DominoStackLogic,
-  secondsToTime,
-  removeRowColElementFromArray,
-  createCopyRow
-} from "../utilities/Manager";
-
+const Manager = require("../utilities/Manager");
 import "../style/GameStyle.css";
 
 const getInitialState = () => {
-  const initialBoard = setInitialBoard(57);
-
+  const initialBoard = Manager.setInitialBoard(57);
+const initialValidLocation = createEmptyValidLocations();
   const initialState = {
     boardMap: initialBoard,
+    validLocationsArray:initialValidLocation,
     cartMap: [],
     selectedCard: null,
     currentScore: 0,
@@ -218,12 +208,8 @@ export default class Game extends React.Component {
     return board;
   }
 
-  toggleCellValid(board, row, col, booleanVal) {
-    board[row][col].valid = booleanVal;
-  }
-
-  updateValidCellsInBoard(board, card, booleanVal) {
-    const { side1, side2 } = card;
+  fetchAndSetBoardWithSignsCells(board, card) {
+    //fetch only one time, and send validLocationsArray that getted from the fetch tw
 
     return fetch("/games/getValidLocations", {
       method: "GET",
@@ -239,24 +225,73 @@ export default class Game extends React.Component {
         const validLocationsArray = JSON.parse(validLocationsArrayText)
           .validLocationsArray;
 
-        for (let col = 0; col < validLocationsArray[side1].length; col++) {
-          this.toggleCellValid(
-            board,
-            validLocationsArray[side1][col].i,
-            validLocationsArray[side1][col].j,
-            booleanVal
+        this.setState(prevState => {
+          const boardMap = this.getBoard(
+            validLocationsArray,
+            [...prevState.boardMap],
+            card
           );
-        }
-
-        for (let col = 0; col < validLocationsArray[side2].length; col++) {
-          this.toggleCellValid(
-            board,
-            validLocationsArray[side2][col].i,
-            validLocationsArray[side2][col].j,
-            booleanVal
-          );
-        }
+          const obj = this.getUpdatedCart([...prevState.cartMap], indexCart);
+          const cartMap = obj.cartMap;
+          const turn = obj.turn;
+          /////////////////////////////////////////////////
+          //I need to get the withdrawals from server!! //
+          ///////////////////////////////////////////////
+          const withdrawals = 0;
+          // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
+          // if (DominoStackLogic.getNumOfPieces() === 0) {
+          //   this.isGameRunning = false;
+          //   this.isWin = false;
+          // }
+          return {
+            boardMap: boardMap,
+            cartMap: cartMap,
+            selectedCard: { value: card, index: indexCart },
+            turn: turn,
+            withdrawals: withdrawals
+          };
+        });
       });
+  }
+
+  toggleCellValid(board, row, col, booleanVal) {
+    board[row][col].valid = booleanVal;
+  }
+
+  getBoard(validLocationsArray, board, card) {
+    if (this.state.selectedCard !== null) {
+      let prevSelectedCard = this.state.selectedCard["value"];
+      this.updateValidCellsInBoard(
+        validLocationsArray,
+        board,
+        prevSelectedCard,
+        false
+      );
+    }
+    this.updateValidCellsInBoard(validLocationsArray, board, card, true);
+    return board;
+  }
+
+  updateValidCellsInBoard(validLocationsArray, board, card, booleanVal) {
+    const { side1, side2 } = card;
+
+    for (let col = 0; col < validLocationsArray[side1].length; col++) {
+      this.toggleCellValid(
+        board,
+        validLocationsArray[side1][col].i,
+        validLocationsArray[side1][col].j,
+        booleanVal
+      );
+    }
+
+    for (let col = 0; col < validLocationsArray[side2].length; col++) {
+      this.toggleCellValid(
+        board,
+        validLocationsArray[side2][col].i,
+        validLocationsArray[side2][col].j,
+        booleanVal
+      );
+    }
   }
 
   toggleCellValid(board, row, col, booleanVal) {
@@ -277,7 +312,7 @@ export default class Game extends React.Component {
       //let averageTurnInSecsToAdd = this.getAverageDiffInSecs();
 
       let neighborsObj = this.getNeighborsObj(row, col);
-      let card = new Card(false, side1, side2, true);
+      let card = new Manager.Card(false, side1, side2, true);
 
       const neighborName = Object.keys(neighborsObj).filter(function(row) {
         return neighborsObj[row] !== null;
@@ -294,7 +329,7 @@ export default class Game extends React.Component {
   }
 
   getNeighborsObj(row, col) {
-    let neighborsObj = new NeighborsObj(
+    let neighborsObj = new Manager.NeighborsObj(
       this.checkNeighborPiece(row - 1, col),
       this.checkNeighborPiece(row + 1, col),
       this.checkNeighborPiece(row, col - 1),
@@ -324,13 +359,26 @@ export default class Game extends React.Component {
   createPiece(neighborName, neighborPiece, side1, side2) {
     let position = this.selectPosition(neighborName, neighborPiece);
 
-    let card = new Card(false, side1, side2, position);
+    let card = new Manager.Card(false, side1, side2, position);
 
     if (this.checkPiecePosition(neighborName, neighborPiece, side1, side2)) {
-      card = new Card(false, side2, side1, position);
+      card = new Manager.Card(false, side2, side1, position);
     }
 
     return card;
+  }
+
+  selectPosition(neighborName, piece) {
+    let position = piece.isLaying;
+    if (
+      (!position && neighborName === "left") ||
+      (!position && neighborName === "right") ||
+      (position && neighborName === "up") ||
+      (position && neighborName === "down")
+    ) {
+      position = !position;
+    }
+    return position;
   }
 
   checkPiecePosition(neighborName, neighborPiece, side1, side2) {
@@ -346,15 +394,13 @@ export default class Game extends React.Component {
     if (card.side1 === card.side2) {
       card.isLaying = !card.isLaying;
     }
-   //it's must to be in server side (the 2 rows below):
-    //this.removeValidLocation(row, col, card);
-   // this.updateValidLocationsByNumber(row, col, card);
-    
+    this.updateValidLocationInServer(row, col, card);
+
     this.removePieceFromCart();
 
     let scoreAddition = card.side1 + card.side2;
     this.isTimerResetNeeded = false;
-   // const average = this.calculateAverageOfTurn();
+    // const average = this.calculateAverageOfTurn();
     this.setState(prevState => {
       const newBoardMap = this.getUpdatedBoard(
         [...prevState.boardMap],
@@ -362,7 +408,7 @@ export default class Game extends React.Component {
         row,
         col
       );
-     ////////////////////////////
+      ////////////////////////////
       //complete that!!!!!///////
       //////////////////////////
       // const newScore = this.getUpdatedScore(
@@ -397,7 +443,7 @@ export default class Game extends React.Component {
   }
 
   getCartMapAfterRemoveCard(index, cartMap) {
-    cartMap[index] = new Card(false);
+    cartMap[index] = new Manager.Card(false);
     return cartMap;
   }
 
@@ -425,8 +471,103 @@ export default class Game extends React.Component {
     return board;
   }
 
-  
+  updateValidLocationInServer(row, col, card) {
+    const objToPost = this.updateValidLocationsByNumber(row, col, card);
 
+    fetch("/games/updateValidLocations", {
+      method: "POST",
+      body: JSON.stringify(objToPost),
+      credentials: "include"
+    }).then(response => {
+      if (!response.ok) {
+        throw response;
+      }
+    });
+  }
 
+  updateValidLocationsByNumber(row, col, card) {
+    const { isLaying } = card;
+    const isJoker = card.side1 === card.side2;
+    let side1Array = new Array(0);
+    let side2Array = new Array(0);
 
+    if (isJoker || isLaying) {
+      if (this.isEmptyAndNotValid(row, col - 1)) {
+        side1Array.push({
+          i: row,
+          j: col - 1
+        });
+      }
+      if (this.isEmptyAndNotValid(row, col + 1)) {
+        side2Array.push({
+          i: row,
+          j: col + 1
+        });
+      }
+    }
+    if (isJoker || isLaying === false) {
+      if (this.isEmptyAndNotValid(row - 1, col)) {
+        side1Array.push({
+          i: row - 1,
+          j: col
+          // laying: isLaying
+        });
+      }
+      if (this.isEmptyAndNotValid(row + 1, col)) {
+        side2Array.push({
+          i: row + 1,
+          j: col
+        });
+      }
+    }
+
+    return {
+      card: card,
+      row: row,
+      col: col,
+      side1Array: side1Array,
+      side2Array: side2Array
+    };
+  }
+
+  isEmptyAndNotValid(row, col) {
+    const { boardMap } = this.state;
+    return (
+      boardMap[row][col].valid !== true &&
+      boardMap[row][col].isLaying === undefined
+    );
+  }
+
+  createEmptyValidLocations() {
+    let matrix = new Array(7);
+    for (let i = 0; i < 7; i++) {
+      matrix[i] = new Array(0);
+    }
+    return matrix;
+  }
+
+  // removeValidLocation(row, col, card) {
+  //   let length1 = this.validLocationsArray[card.side1].length;
+  //   let length2 = this.validLocationsArray[card.side2].length;
+  //   let arr1 = createCopyRow(this.validLocationsArray, card.side1);
+  //   let arr2 = createCopyRow(this.validLocationsArray, card.side2);
+  //   let output1 = removeRowColElementFromArray(arr1, row, col);
+  //   let output2 = removeRowColElementFromArray(arr2, row, col);
+
+  //   if (output1) {
+  //     length1--;
+  //     this.validLocationsArray[card.side1] = new Array(length1);
+  //     for (let i = 0; i < length1; i++) {
+  //       this.validLocationsArray[card.side1][i] = arr1[i];
+  //     }
+  //   }
+
+  //   if (output2) {
+  //     length2--;
+  //     this.validLocationsArray[card.side2] = new Array(length2);
+  //     for (let i = 0; i < length2; i++) {
+  //       this.validLocationsArray[card.side2][i] = arr2[i];
+  //     }
+  //   }
+  // }
 }

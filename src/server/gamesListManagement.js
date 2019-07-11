@@ -16,6 +16,11 @@ gamesListManagement.post("/addUser", games.addUserToGame, (req, res) => {
   res.sendStatus(200);
 });
 
+gamesListManagement.post("/updateValidLocations", games.updateValidLocations, (req, res) => {
+  res.sendStatus(200);
+});
+
+
 gamesListManagement.get("/allGames", auth.userAuthentication, (req, res) => {
   let list = games.getGamesList();
   res.status(200).json(list);
