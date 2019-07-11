@@ -146,7 +146,7 @@ function createEmptyValidLocations() {
   return matrix;
 }
 
-function updateValidLocations(req, res, next) {
+function updateValidLocationsAndBoard(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   const reqBodyObj = JSON.parse(req.body);
@@ -155,7 +155,11 @@ function updateValidLocations(req, res, next) {
   const col = reqBodyObj.col;
   const side1Array = reqBodyObj.side1Array;
   const side2Array = reqBodyObj.side2Array;
+  const isUpdateValidLocationNeeded=reqBodyObj.isUpdateValidLocation;
   gameData.boardMap = reqBodyObj.boardMap;
+ 
+ if(isUpdateValidLocationNeeded)
+ {
   removeValidLocation(roomId, row, col, card);
 
   for (let i = 0; i < side1Array.length; i++) {
@@ -165,6 +169,7 @@ function updateValidLocations(req, res, next) {
   for (let i = 0; i < side2Array.length; i++) {
     gameData.validLocationsArray[card.side2].push(side2Array[i]);
   }
+}
   next();
 }
 
@@ -206,5 +211,5 @@ module.exports = {
   isUserInRoom,
   getNewCart,
   getValidLocations,
-  updateValidLocations
+  updateValidLocations: updateValidLocationsAndBoard
 };

@@ -42,6 +42,8 @@ export default class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = getInitialState();
+    this.fetchBoardData = this.fetchBoardData.bind(this);
+    this.fetchBoardDataWrapper = this.fetchBoardDataWrapper.bind(this);
 
     //this.restartGame = this.restartGame.bind(this);
 
@@ -64,6 +66,7 @@ export default class Game extends React.Component {
     this.currentTime = { minutes: 0, seconds: 0 };
     this.lastPieceTime = { minutes: 0, seconds: 0 };
     this.isTimerResetNeeded = false;
+    this._isMounted = false;
 
     ////////////////////////////////////////
     //this.movesHistory = new Array(0);
@@ -122,8 +125,20 @@ export default class Game extends React.Component {
       </div>
     );
   }
+  componentWillUnmount() {
+    this._isMounted = false;
+    if (this.timeoutId) {
+      (() => {
+        clearTimeout(this.timeoutId);
+      })();
+    }
+  }
 
   componentDidMount() {
+    this._isMounted = true;
+    //if (this.props.isUserConnected&&this._isMounted === true) this.getGamesList();
+    if (this._isMounted === true) this.fetchBoardData();
+
     return fetch("/games/getCart", {
       method: "GET",
       credentials: "include"
@@ -139,8 +154,12 @@ export default class Game extends React.Component {
       });
   }
 
-  componentDidUpdate() {
-    //add fetch board also
+  fetchBoardDataWrapper() {
+    this.fetchBoardData();
+  }
+
+  fetchBoardData() {
+    const interval = 200; //TODO: change to 200
     return fetch("/games/getValidLocations", {
       method: "GET",
       credentials: "include"
@@ -149,47 +168,75 @@ export default class Game extends React.Component {
         if (!response.ok) {
           throw response;
         }
+        this.timeoutId = setTimeout(this.fetchBoardDataWrapper, interval);
+
         return response.json();
       })
       .then(serverOutput => {
         const validLocationsArray = JSON.parse(serverOutput)
           .validLocationsArray;
-          const newBoardMap = JSON.parse(serverOutput)
-          .boardMap;
-        this.setState(() => ({boardMap: newBoardMap ,validLocationsArray: validLocationsArray }));
+        const newBoardMap = JSON.parse(serverOutput).boardMap;
+        this.setState(() => ({
+          boardMap: newBoardMap,
+          validLocationsArray: validLocationsArray
+        }));
       });
   }
+
   /////////////////////////////////////////////////
   handleCartClick(indexCart, card) {
     if (this.isGameRunning) {
       console.log("clicked" + indexCart);
       this.isTimerResetNeeded = false;
       //////////////////////////////////////////////////
-      this.setState(prevState => {
-        const boardMap = this.getBoardWithSignsCells(
-          [...prevState.boardMap],
-          card
-        );
-        const obj = this.getUpdatedCart([...prevState.cartMap], indexCart);
-        const cartMap = obj.cartMap;
-        const turn = obj.turn;
-        /////////////////////////////////////////////////
-        //I need to get the withdrawals from server!! //
-        ///////////////////////////////////////////////
-        const withdrawals = 0;
-        // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
-        // if (DominoStackLogic.getNumOfPieces() === 0) {
-        //   this.isGameRunning = false;
-        //   this.isWin = false;
-        // }
-        return {
-          boardMap: boardMap,
-          cartMap: cartMap,
-          selectedCard: { value: card, index: indexCart },
-          turn: turn,
-          withdrawals: withdrawals
-        };
-      });
+      const boardMap = this.getBoardWithSignsCells(
+        [...this.state.boardMap],
+        card
+      );
+
+      const objToPost = {
+        isUpdateValidLocation: false,
+        boardMap: boardMap,
+        card: card
+      };
+
+      fetch("/games/updateValidLocations", {
+        method: "POST",
+        body: JSON.stringify(objToPost),
+        credentials: "include"
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+        })
+        .then(() => {
+          this.setState(prevState => {
+            const boardMap = this.getBoardWithSignsCells(
+              [...prevState.boardMap],
+              card
+            );
+            const obj = this.getUpdatedCart([...prevState.cartMap], indexCart);
+            const cartMap = obj.cartMap;
+            const turn = obj.turn;
+            /////////////////////////////////////////////////
+            //I need to get the withdrawals from server!! //
+            ///////////////////////////////////////////////
+            const withdrawals = 0;
+            // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
+            // if (DominoStackLogic.getNumOfPieces() === 0) {
+            //   this.isGameRunning = false;
+            //   this.isWin = false;
+            // }
+            return {
+              boardMap: boardMap,
+              cartMap: cartMap,
+              selectedCard: { value: card, index: indexCart },
+              turn: turn,
+              withdrawals: withdrawals
+            };
+          });
+        });
     }
   }
 
@@ -442,7 +489,7 @@ export default class Game extends React.Component {
   }
 
   updateValidLocationInServer(row, col, card) {
-    const objToPost = this.updateValidLocationsByNumber(row, col, card);
+    const objToPost = this.updateValidLocationsAndBoard(row, col, card);
 
     fetch("/games/updateValidLocations", {
       method: "POST",
@@ -455,7 +502,7 @@ export default class Game extends React.Component {
     });
   }
 
-  updateValidLocationsByNumber(row, col, card) {
+  updateValidLocationsAndBoard(row, col, card) {
     const { isLaying } = card;
     const isJoker = card.side1 === card.side2;
     let side1Array = new Array(0);
@@ -491,8 +538,14 @@ export default class Game extends React.Component {
       }
     }
 
-    const newBoard = this.getUpdatedBoard([...this.state.boardMap], card, row, col);
+    const newBoard = this.getUpdatedBoard(
+      [...this.state.boardMap],
+      card,
+      row,
+      col
+    );
     return {
+      isUpdateValidLocation: true,
       boardMap: newBoard,
       card: card,
       row: row,
