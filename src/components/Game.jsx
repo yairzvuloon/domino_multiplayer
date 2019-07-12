@@ -44,7 +44,7 @@ export default class Game extends React.Component {
     this.state = getInitialState();
     this.fetchBoardData = this.fetchBoardData.bind(this);
     this.fetchBoardDataWrapper = this.fetchBoardDataWrapper.bind(this);
-
+    this.handleDrawButton = this.handleDrawButton.bind(this);
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
@@ -73,7 +73,7 @@ export default class Game extends React.Component {
     //this.redoMoves = new Array(0);
   }
   render() {
-    //let prevButton = <button onClick={this.handlePrevButton}> Prev</button>;
+    const drawButton = <button onClick={this.handleDrawButton}> Draw</button>;
     //let newGameButton,
     //nextButton = null;
     let gameDoneSentence = null;
@@ -118,13 +118,36 @@ export default class Game extends React.Component {
             onClick={(i, value) => this.handleCartClick(i, value)}
           />
         </div>
-        {/* {newGameButton}
-      {prevButton}
-      {nextButton} */}
+        {/* {newGameButton} */}
+        {drawButton}
         {gameDoneSentence}
       </div>
     );
   }
+  handleDrawButton() {
+    return fetch("/games/getCard", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
+      })
+      .then(domino => {
+        this.setState(prevState => {
+          const cartMap = [...prevState.cartMap];
+          if (domino) {
+            cartMap.push(JSON.parse(domino).card);
+            //     numOfTurnsToAdd++;
+            //   }
+          }
+          return { cartMap: cartMap };
+        });
+      });
+  }
+
   componentWillUnmount() {
     this._isMounted = false;
     if (this.timeoutId) {

@@ -16,7 +16,7 @@ gamesListManagement.post("/addUser", games.addUserToGame, (req, res) => {
   res.sendStatus(200);
 });
 
-gamesListManagement.post("/updateValidLocations", games.updateValidLocations, (req, res) => {
+gamesListManagement.post("/updateValidLocations", games.updateValidLocationsAndBoard, (req, res) => {
   res.sendStatus(200);
 });
 
@@ -36,10 +36,24 @@ gamesListManagement.get(
   auth.userAuthentication,
   games.isUserInRoom,
   (req, res) => {
-    let cart = games.getNewCart(req);
+    const cart = games.getNewCart(req);
     res.status(200).json(cart);
   }
 );
+
+gamesListManagement.get(
+  "/getCard",
+  auth.userAuthentication,
+  games.isUserInRoom,
+  (req, res) => {
+    const card = games.getCard(req);
+    res.status(200).json(card);
+  }
+);
+
+
+
+
 
 gamesListManagement.get(
   "/getValidLocations",

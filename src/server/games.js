@@ -155,21 +155,20 @@ function updateValidLocationsAndBoard(req, res, next) {
   const col = reqBodyObj.col;
   const side1Array = reqBodyObj.side1Array;
   const side2Array = reqBodyObj.side2Array;
-  const isUpdateValidLocationNeeded=reqBodyObj.isUpdateValidLocation;
+  const isUpdateValidLocationNeeded = reqBodyObj.isUpdateValidLocation;
   gameData.boardMap = reqBodyObj.boardMap;
- 
- if(isUpdateValidLocationNeeded)
- {
-  removeValidLocation(roomId, row, col, card);
 
-  for (let i = 0; i < side1Array.length; i++) {
-    gameData.validLocationsArray[card.side1].push(side1Array[i]);
-  }
+  if (isUpdateValidLocationNeeded) {
+    removeValidLocation(roomId, row, col, card);
 
-  for (let i = 0; i < side2Array.length; i++) {
-    gameData.validLocationsArray[card.side2].push(side2Array[i]);
+    for (let i = 0; i < side1Array.length; i++) {
+      gameData.validLocationsArray[card.side1].push(side1Array[i]);
+    }
+
+    for (let i = 0; i < side2Array.length; i++) {
+      gameData.validLocationsArray[card.side2].push(side2Array[i]);
+    }
   }
-}
   next();
 }
 
@@ -199,7 +198,11 @@ function removeValidLocation(roomId, row, col, card) {
     }
   }
 }
-
+function getCard(req) {
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+  return JSON.stringify({ card: gameData.DominoStackLogic.getCard() });
+}
 module.exports = {
   gameAuthentication,
   addGameToGamesList,
@@ -211,5 +214,6 @@ module.exports = {
   isUserInRoom,
   getNewCart,
   getValidLocations,
-  updateValidLocations: updateValidLocationsAndBoard
+  updateValidLocationsAndBoard,
+  getCard
 };
