@@ -44,11 +44,12 @@ export default class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = getInitialState();
-    this.fetchBoardData = this.fetchBoardData.bind(this);
+  
     this.fetchBoardDataWrapper = this.fetchBoardDataWrapper.bind(this);
     this.fetchBoardData = this.fetchBoardData.bind(this);
     this.fetchIsAllPlayersInWrapper = this.fetchIsAllPlayersInWrapper.bind(this);
     this.fetchIsAllPlayersIn = this.fetchIsAllPlayersIn.bind(this);
+    this.handleDrawButton=this.handleDrawButton.bind(this);
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
@@ -237,6 +238,7 @@ export default class Game extends React.Component {
       })
       .then(isAllPlayersIn => {
         const isAllPlayersInRoom = JSON.parse(isAllPlayersIn);
+       
         this.setState(() => ({
           isAllPlayersInRoom: isAllPlayersInRoom,
           isGameRunning:isAllPlayersInRoom
@@ -509,13 +511,14 @@ export default class Game extends React.Component {
         index,
         prevState.cartMap
       );
+      let isGameRunningCopy=true;
       if (this.isCartEmpty()) {
-        //this.isGameRunning = false;
+        isGameRunningCopy = false;
         this.isWin = true;
       }
       return {
         cartMap: newCartMap,
-       isGameRunning: false
+       isGameRunning: isGameRunningCopy
       };
     });
   }
