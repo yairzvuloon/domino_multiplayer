@@ -20,9 +20,9 @@ gamesListManagement.post("/updateValidLocations", games.updateValidLocationsAndB
   res.sendStatus(200);
 });
 
-gamesListManagement.post("/moveToNextTurn", games.moveToNextTurn, (req, res) => {
-  res.sendStatus(200);
-});
+// gamesListManagement.post("/moveToNextTurn", games.moveToNextTurn, (req, res) => {
+//   res.sendStatus(200);
+// });
 
 
 gamesListManagement.get("/allGames", auth.userAuthentication, (req, res) => {
@@ -75,10 +75,15 @@ gamesListManagement.get(
   }
 );
 
-
-
-
-
+gamesListManagement.get(
+  "/getCurrentPlayerName",
+  auth.userAuthentication,
+  games.isUserInRoom,
+  (req, res) => {
+    const name = games.getCurrentPlayer(req);
+    res.status(200).json(name);
+  }
+);
 
 gamesListManagement.get(
   "/getValidLocations",

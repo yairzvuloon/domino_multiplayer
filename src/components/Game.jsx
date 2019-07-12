@@ -23,7 +23,8 @@ const getInitialState = () => {
     isAllPlayersInRoom: false,
     isGameStarted: false,
     isGameDone: false,
-    isMyTurn: false
+    isMyTurn: false,
+    currentPlayerName:""
   };
 
   return initialState;
@@ -56,6 +57,7 @@ export default class Game extends React.Component {
     this.fetchIsMyTurn = this.fetchIsMyTurn.bind(this);
     this.fetchIsMyTurnWrapper = this.fetchIsMyTurnWrapper.bind(this);
     this.handleDrawButton = this.handleDrawButton.bind(this);
+    this.fetchGetCurrentPlayerName= this.fetchGetCurrentPlayerName.bind(this);
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
@@ -91,7 +93,7 @@ export default class Game extends React.Component {
     let gameSentence = null;
     if (this.state.isGameStarted) {
       if (!this.state.isMyTurn) {
-        gameSentence = <p>it's other player turn </p>;
+        gameSentence = <p>it's {this.state.currentPlayerName} turn </p>;
       }
     } else {
       //newGameButton = <button onClick={this.restartGame}>newGame</button>;
@@ -144,6 +146,8 @@ export default class Game extends React.Component {
     );
   }
 
+  
+
   handleDrawButton() {
     return fetch("/games/getCard", {
       method: "GET",
@@ -191,6 +195,7 @@ export default class Game extends React.Component {
       this.fetchIsAllPlayersIn();
       this.fetchBoardData();
       this.fetchIsMyTurn();
+      this.fetchGetCurrentPlayerName();
     
 
     return fetch("/games/getCart", {
@@ -208,6 +213,33 @@ export default class Game extends React.Component {
       });
     }
   }
+
+  fetchGetCurrentPlayerName(){
+    const interval = 200; //TODO: change to 200
+    if (!this.state.isGameDone) {
+      return fetch("/games/getCurrentPlayerName", {
+        method: "GET",
+        credentials: "include"
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+
+          this.timeoutId = setTimeout(
+            this.fetchGetCurrentPlayerName,
+            interval
+          );
+
+          return response.json();
+        })
+        .then(currentPlayerName => {
+          this.setState(() => ({
+            currentPlayerName:JSON.parse(currentPlayerName)
+          }));
+        });
+  }
+}
 
   fetchBoardDataWrapper() {
     this.fetchBoardData();

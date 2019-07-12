@@ -1,4 +1,5 @@
 const Manager = require("../utilities/Manager");
+const auth = require("./auth");
 
 const gamesList = {};
 const userRoomId = {};
@@ -234,22 +235,17 @@ function isAllPlayersIn(req) {
   );
 }
 
-function moveToNextTurn(req, res, next)
-{
+function moveToNextTurn(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   const indexPlayer = gameData.currentPlayerIndex;
-  if(req.session.id===gameData.subscribesIdStrings[indexPlayer])
-  {
-
-  if(indexPlayer+1===JSON.parse(gameData.numPlayerToStart))
-  {
-    gameData.currentPlayerIndex=0;
+  if (req.session.id === gameData.subscribesIdStrings[indexPlayer]) {
+    if (indexPlayer + 1 === JSON.parse(gameData.numPlayerToStart)) {
+      gameData.currentPlayerIndex = 0;
+    } else {
+      gameData.currentPlayerIndex++;
+    }
   }
-  else{
-    gameData.currentPlayerIndex++;
-  }
-}
 }
 
 function isMyTurn(req) {
@@ -257,6 +253,14 @@ function isMyTurn(req) {
   const gameData = gamesList[roomId];
   const indexPlayer = gameData.currentPlayerIndex;
   return req.session.id === gameData.subscribesIdStrings[indexPlayer];
+}
+
+function getCurrentPlayer(req) {
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+  const indexPlayer = gameData.currentPlayerIndex;
+  const currentPlayerId = gameData.subscribesIdStrings[indexPlayer];
+  return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
 }
 
 module.exports = {
@@ -274,5 +278,6 @@ module.exports = {
   getCard,
   isAllPlayersIn,
   isMyTurn,
-  moveToNextTurn
+  moveToNextTurn,
+  getCurrentPlayer
 };
