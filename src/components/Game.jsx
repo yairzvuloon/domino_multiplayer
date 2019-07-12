@@ -19,7 +19,9 @@ const getInitialState = () => {
     turn: 0,
     withdrawals: 0,
     average: { minutes: 0, seconds: 0 },
-    timeToDisplay: null
+    timeToDisplay: null,
+    isAllPlayersInRoom: false,
+    isGameRunning: false
   };
 
   return initialState;
@@ -44,7 +46,9 @@ export default class Game extends React.Component {
     this.state = getInitialState();
     this.fetchBoardData = this.fetchBoardData.bind(this);
     this.fetchBoardDataWrapper = this.fetchBoardDataWrapper.bind(this);
-    this.handleDrawButton = this.handleDrawButton.bind(this);
+    this.fetchBoardData = this.fetchBoardData.bind(this);
+    this.fetchIsAllPlayersInWrapper = this.fetchIsAllPlayersInWrapper.bind(this);
+    this.fetchIsAllPlayersIn = this.fetchIsAllPlayersIn.bind(this);
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
@@ -59,7 +63,7 @@ export default class Game extends React.Component {
     //this.isTheFirstPiece = this.isTheFirstPiece.bind(this);
     // this.isJoker = this.isJoker.bind(this);
 
-    this.isGameRunning = true;
+    //this.isGameRunning = false;
     this.isWin = false;
     this.cartEmptyFlag = false;
     //this.validLocationsArray = this.createEmptyValidLocations();
@@ -76,15 +80,18 @@ export default class Game extends React.Component {
     const drawButton = <button onClick={this.handleDrawButton}> Draw</button>;
     //let newGameButton,
     //nextButton = null;
-    let gameDoneSentence = null;
-    if (!this.isGameRunning) {
+    let gameSentence = null;
+    if (!this.state.isGameRunning) {
       //newGameButton = <button onClick={this.restartGame}>newGame</button>;
       //nextButton = <button onClick={this.handleNextButton}> Next</button>;
-
-      if (this.isWin) {
-        gameDoneSentence = <p>YOU WINNER!!!</p>;
+      if (!this.state.isAllPlayersInRoom) {
+        gameSentence = <p>we waiting for more players </p>;
       } else {
-        gameDoneSentence = <p>YOU LOSER...</p>;
+        if (this.isWin) {
+          gameSentence = <p>YOU WINNER!!!</p>;
+        } else {
+          gameSentence = <p>YOU LOSER...</p>;
+        }
       }
     }
     return (
@@ -94,7 +101,7 @@ export default class Game extends React.Component {
           id="timer"
           sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
           isResetNeeded={this.isTimerResetNeeded}
-          isGameRunning={this.isGameRunning}
+          isGameRunning={this.state.isGameRunning}
           timeToDisplay={this.state.timeToDisplay}
         />
         <Stats
@@ -120,10 +127,11 @@ export default class Game extends React.Component {
         </div>
         {/* {newGameButton} */}
         {drawButton}
-        {gameDoneSentence}
+        {gameSentence}
       </div>
     );
   }
+
   handleDrawButton() {
     return fetch("/games/getCard", {
       method: "GET",
@@ -160,7 +168,10 @@ export default class Game extends React.Component {
   componentDidMount() {
     this._isMounted = true;
     //if (this.props.isUserConnected&&this._isMounted === true) this.getGamesList();
-    if (this._isMounted === true) this.fetchBoardData();
+    if (this._isMounted === true) {
+      this.fetchBoardData();
+      this.fetchIsAllPlayersIn();
+    }
 
     return fetch("/games/getCart", {
       method: "GET",
@@ -206,9 +217,35 @@ export default class Game extends React.Component {
       });
   }
 
+  fetchIsAllPlayersInWrapper() {
+    this.fetchIsAllPlayersIn();
+  }
+
+  fetchIsAllPlayersIn() {
+    const interval = 200; //TODO: change to 200
+    return fetch("/games/isAllPlayersIn", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        this.timeoutId = setTimeout(this.fetchIsAllPlayersInWrapper, interval);
+
+        return response.json();
+      })
+      .then(isAllPlayersIn => {
+        const isAllPlayersInRoom = JSON.parse(isAllPlayersIn);
+        this.setState(() => ({
+          isAllPlayersInRoom: isAllPlayersInRoom,
+          isGameRunning:isAllPlayersInRoom
+        }));
+      });
+  }
   /////////////////////////////////////////////////
   handleCartClick(indexCart, card) {
-    if (this.isGameRunning) {
+    if (this.state.isGameRunning) {
       console.log("clicked" + indexCart);
       this.isTimerResetNeeded = false;
       //////////////////////////////////////////////////
@@ -248,7 +285,7 @@ export default class Game extends React.Component {
             const withdrawals = 0;
             // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
             // if (DominoStackLogic.getNumOfPieces() === 0) {
-            //   this.isGameRunning = false;
+            //   this.state.isGameRunning = false;
             //   this.isWin = false;
             // }
             return {
@@ -473,11 +510,12 @@ export default class Game extends React.Component {
         prevState.cartMap
       );
       if (this.isCartEmpty()) {
-        this.isGameRunning = false;
+        //this.isGameRunning = false;
         this.isWin = true;
       }
       return {
-        cartMap: newCartMap
+        cartMap: newCartMap,
+       isGameRunning: false
       };
     });
   }

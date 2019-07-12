@@ -198,11 +198,21 @@ function removeValidLocation(roomId, row, col, card) {
     }
   }
 }
+
 function getCard(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   return JSON.stringify({ card: gameData.DominoStackLogic.getCard() });
 }
+
+function isAllPlayersIn(req)
+{
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+  return JSON.stringify(gameData.numberOfSubscribes === JSON.parse(gameData.numPlayerToStart));
+}
+
+
 module.exports = {
   gameAuthentication,
   addGameToGamesList,
@@ -215,5 +225,6 @@ module.exports = {
   getNewCart,
   getValidLocations,
   updateValidLocationsAndBoard,
-  getCard
+  getCard,
+  isAllPlayersIn
 };

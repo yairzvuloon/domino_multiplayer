@@ -51,6 +51,17 @@ gamesListManagement.get(
   }
 );
 
+gamesListManagement.get(
+  "/isAllPlayersIn",
+  auth.userAuthentication,
+  games.isUserInRoom,
+  (req, res) => {
+    const isAllPlayersIn = games.isAllPlayersIn(req);
+    res.status(200).json(isAllPlayersIn);
+  }
+);
+
+
 
 
 
