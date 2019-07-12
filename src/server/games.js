@@ -1,6 +1,7 @@
 const Manager = require("../utilities/Manager");
 
 const gamesList = {};
+const userRoomId = {};
 
 function gameAuthentication(req, res, next) {
   if (gamesList[req.session.id] === undefined) {
@@ -25,6 +26,7 @@ function addGameToGamesList(req, res, next) {
     const obj = JSON.parse(req.body);
     obj.id = req.session.id;
     obj.subscribesIdStrings[0] = req.session.id;
+    userRoomId[ req.session.id]={id: req.session.id, subscribesIdStringsIndex:0};
     obj.DominoStackLogic = new Manager.DominoStack();
     obj.validLocationsArray = createEmptyValidLocations();
     obj.boardMap = Manager.setInitialBoard(57);
@@ -77,6 +79,7 @@ function removeUserFromGame(req, res, next) {
     } else {
       gamesList[roomId].subscribesIdStrings.splice(index, 1);
       gamesList[roomId].numberOfSubscribes--;
+      userRoomId[req.session.id] = undefined;
       //gameData.subscribesIdStrings.splice(index, 1);
       // gameData.numberOfSubscribes--;
       // gamesList[roomId] = JSON.stringify(gameData);
@@ -86,21 +89,25 @@ function removeUserFromGame(req, res, next) {
 }
 
 function getMyRoomId(req) {
-  if (gamesList[req.session.id] !== undefined) {
-    return JSON.stringify({ id: req.session.id, subscribesIdStringsIndex: 0 });
-  } else if (gamesList[req.session.id] === undefined) {
-    for (sessionId in gamesList) {
-      const gameData = gamesList[sessionId];
+  // if (gamesList[req.session.id] !== undefined) {
+  //   return JSON.stringify({ id: req.session.id, subscribesIdStringsIndex: 0 });
+  // } else if (gamesList[req.session.id] === undefined) {
+  //   for (sessionId in gamesList) {
+  //     const gameData = gamesList[sessionId];
 
-      for (var i = 0; i < gameData.numberOfSubscribes; i++) {
-        if (gameData.subscribesIdStrings[i] === req.session.id) {
-          return JSON.stringify({
-            id: gameData.id,
-            subscribesIdStringsIndex: i
-          });
-        }
-      }
-    }
+  //     for (var i = 0; i < gameData.numberOfSubscribes; i++) {
+  //       if (gameData.subscribesIdStrings[i] === req.session.id) {
+  //         return JSON.stringify({
+  //           id: gameData.id,
+  //           subscribesIdStringsIndex: i
+  //         });
+  //       }
+  //     }
+  //   }
+  // }
+  if(userRoomId[req.session.id]!==undefined)
+  {
+    return JSON.stringify(userRoomId[req.session.id]);
   }
   return JSON.stringify({ id: "", subscribesIdStringsIndex: "" });
 }
@@ -124,7 +131,9 @@ function addUserToGame(req, res, next) {
   } else {
     gamesList[roomID].subscribesIdStrings[gameData.numberOfSubscribes] =
       req.session.id;
+    userRoomId[req.session.id] = {id: roomID, subscribesIdStringsIndex:gamesList[roomID].numberOfSubscribes};
     gamesList[roomID].numberOfSubscribes++;
+
     // gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
     // gameData.numberOfSubscribes++;
     // gamesList[roomID] = JSON.stringify(gameData);
@@ -177,8 +186,11 @@ function removeValidLocation(roomId, row, col, card) {
 
   let length1 = gameData.validLocationsArray[card.side1].length;
   let length2 = gameData.validLocationsArray[card.side2].length;
-  let arr1 = Manager.createCopyRow(gameData.validLocationsArray, card.side1);
-  let arr2 = Manager.createCopyRow(gameData.validLocationsArray, card.side2);
+  let arr1=new Array(0);
+  let arr2=new Array(0);
+
+  arr1 = Manager.createCopyRow(gameData.validLocationsArray, card.side1);
+  arr2 = Manager.createCopyRow(gameData.validLocationsArray, card.side2);
   let output1 = Manager.removeRowColElementFromArray(arr1, row, col);
   let output2 = Manager.removeRowColElementFromArray(arr2, row, col);
 
@@ -186,7 +198,7 @@ function removeValidLocation(roomId, row, col, card) {
     length1--;
     gameData.validLocationsArray[card.side1] = new Array(length1);
     for (let i = 0; i < length1; i++) {
-      gameData.validLocationsArray[card.side1] = arr1[i];
+      gameData.validLocationsArray[card.side1][i] = arr1[i];
     }
   }
 
@@ -205,13 +217,13 @@ function getCard(req) {
   return JSON.stringify({ card: gameData.DominoStackLogic.getCard() });
 }
 
-function isAllPlayersIn(req)
-{
+function isAllPlayersIn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
-  return JSON.stringify(gameData.numberOfSubscribes === JSON.parse(gameData.numPlayerToStart));
+  return JSON.stringify(
+    gameData.numberOfSubscribes === JSON.parse(gameData.numPlayerToStart)
+  );
 }
-
 
 module.exports = {
   gameAuthentication,
