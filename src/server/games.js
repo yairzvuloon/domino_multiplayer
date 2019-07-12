@@ -26,14 +26,19 @@ function addGameToGamesList(req, res, next) {
     const obj = JSON.parse(req.body);
     obj.id = req.session.id;
     obj.subscribesIdStrings[0] = req.session.id;
-    userRoomId[ req.session.id]={id: req.session.id, subscribesIdStringsIndex:0};
+    userRoomId[req.session.id] = {
+      id: req.session.id,
+      subscribesIdStringsIndex: 0
+    };
     obj.DominoStackLogic = new Manager.DominoStack();
     obj.validLocationsArray = createEmptyValidLocations();
     obj.boardMap = Manager.setInitialBoard(57);
+    obj.currentPlayerIndex = 0;
     gamesList[req.session.id] = obj;
     next();
   }
 }
+
 function getGamesList() {
   return JSON.stringify(gamesList);
 }
@@ -105,8 +110,7 @@ function getMyRoomId(req) {
   //     }
   //   }
   // }
-  if(userRoomId[req.session.id]!==undefined)
-  {
+  if (userRoomId[req.session.id] !== undefined) {
     return JSON.stringify(userRoomId[req.session.id]);
   }
   return JSON.stringify({ id: "", subscribesIdStringsIndex: "" });
@@ -131,7 +135,10 @@ function addUserToGame(req, res, next) {
   } else {
     gamesList[roomID].subscribesIdStrings[gameData.numberOfSubscribes] =
       req.session.id;
-    userRoomId[req.session.id] = {id: roomID, subscribesIdStringsIndex:gamesList[roomID].numberOfSubscribes};
+    userRoomId[req.session.id] = {
+      id: roomID,
+      subscribesIdStringsIndex: gamesList[roomID].numberOfSubscribes
+    };
     gamesList[roomID].numberOfSubscribes++;
 
     // gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
@@ -169,6 +176,7 @@ function updateValidLocationsAndBoard(req, res, next) {
 
   if (isUpdateValidLocationNeeded) {
     removeValidLocation(roomId, row, col, card);
+    moveToNextTurn(req, res, next);
 
     for (let i = 0; i < side1Array.length; i++) {
       gameData.validLocationsArray[card.side1].push(side1Array[i]);
@@ -186,8 +194,8 @@ function removeValidLocation(roomId, row, col, card) {
 
   let length1 = gameData.validLocationsArray[card.side1].length;
   let length2 = gameData.validLocationsArray[card.side2].length;
-  let arr1=new Array(0);
-  let arr2=new Array(0);
+  let arr1 = new Array(0);
+  let arr2 = new Array(0);
 
   arr1 = Manager.createCopyRow(gameData.validLocationsArray, card.side1);
   arr2 = Manager.createCopyRow(gameData.validLocationsArray, card.side2);
@@ -214,6 +222,7 @@ function removeValidLocation(roomId, row, col, card) {
 function getCard(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
+  moveToNextTurn(req);
   return JSON.stringify({ card: gameData.DominoStackLogic.getCard() });
 }
 
@@ -223,6 +232,31 @@ function isAllPlayersIn(req) {
   return JSON.stringify(
     gameData.numberOfSubscribes === JSON.parse(gameData.numPlayerToStart)
   );
+}
+
+function moveToNextTurn(req, res, next)
+{
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+  const indexPlayer = gameData.currentPlayerIndex;
+  if(req.session.id===gameData.subscribesIdStrings[indexPlayer])
+  {
+
+  if(indexPlayer+1===JSON.parse(gameData.numPlayerToStart))
+  {
+    gameData.currentPlayerIndex=0;
+  }
+  else{
+    gameData.currentPlayerIndex++;
+  }
+}
+}
+
+function isMyTurn(req) {
+  const roomId = JSON.parse(getMyRoomId(req)).id;
+  const gameData = gamesList[roomId];
+  const indexPlayer = gameData.currentPlayerIndex;
+  return req.session.id === gameData.subscribesIdStrings[indexPlayer];
 }
 
 module.exports = {
@@ -238,5 +272,7 @@ module.exports = {
   getValidLocations,
   updateValidLocationsAndBoard,
   getCard,
-  isAllPlayersIn
+  isAllPlayersIn,
+  isMyTurn,
+  moveToNextTurn
 };

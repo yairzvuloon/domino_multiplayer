@@ -20,6 +20,10 @@ gamesListManagement.post("/updateValidLocations", games.updateValidLocationsAndB
   res.sendStatus(200);
 });
 
+gamesListManagement.post("/moveToNextTurn", games.moveToNextTurn, (req, res) => {
+  res.sendStatus(200);
+});
+
 
 gamesListManagement.get("/allGames", auth.userAuthentication, (req, res) => {
   let list = games.getGamesList();
@@ -58,6 +62,16 @@ gamesListManagement.get(
   (req, res) => {
     const isAllPlayersIn = games.isAllPlayersIn(req);
     res.status(200).json(isAllPlayersIn);
+  }
+);
+
+gamesListManagement.get(
+  "/isMyTurn",
+  auth.userAuthentication,
+  games.isUserInRoom,
+  (req, res) => {
+    const isMyTurn = games.isMyTurn(req);
+    res.status(200).json(isMyTurn);
   }
 );
 

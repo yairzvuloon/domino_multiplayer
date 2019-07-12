@@ -21,7 +21,9 @@ const getInitialState = () => {
     average: { minutes: 0, seconds: 0 },
     timeToDisplay: null,
     isAllPlayersInRoom: false,
-    isGameRunning: false
+    isGameStarted: false,
+    isGameDone: false,
+    isMyTurn: false
   };
 
   return initialState;
@@ -44,12 +46,16 @@ export default class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = getInitialState();
-  
+
     this.fetchBoardDataWrapper = this.fetchBoardDataWrapper.bind(this);
     this.fetchBoardData = this.fetchBoardData.bind(this);
-    this.fetchIsAllPlayersInWrapper = this.fetchIsAllPlayersInWrapper.bind(this);
+    this.fetchIsAllPlayersInWrapper = this.fetchIsAllPlayersInWrapper.bind(
+      this
+    );
     this.fetchIsAllPlayersIn = this.fetchIsAllPlayersIn.bind(this);
-    this.handleDrawButton=this.handleDrawButton.bind(this);
+    this.fetchIsMyTurn = this.fetchIsMyTurn.bind(this);
+    this.fetchIsMyTurnWrapper = this.fetchIsMyTurnWrapper.bind(this);
+    this.handleDrawButton = this.handleDrawButton.bind(this);
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
@@ -64,7 +70,7 @@ export default class Game extends React.Component {
     //this.isTheFirstPiece = this.isTheFirstPiece.bind(this);
     // this.isJoker = this.isJoker.bind(this);
 
-    //this.isGameRunning = false;
+    //this.isGameStarted = false;
     this.isWin = false;
     this.cartEmptyFlag = false;
     //this.validLocationsArray = this.createEmptyValidLocations();
@@ -72,6 +78,7 @@ export default class Game extends React.Component {
     this.lastPieceTime = { minutes: 0, seconds: 0 };
     this.isTimerResetNeeded = false;
     this._isMounted = false;
+    this.isFetchNeeded = true;
 
     ////////////////////////////////////////
     //this.movesHistory = new Array(0);
@@ -82,7 +89,11 @@ export default class Game extends React.Component {
     //let newGameButton,
     //nextButton = null;
     let gameSentence = null;
-    if (!this.state.isGameRunning) {
+    if (this.state.isGameStarted) {
+      if (!this.state.isMyTurn) {
+        gameSentence = <p>it's other player turn </p>;
+      }
+    } else {
       //newGameButton = <button onClick={this.restartGame}>newGame</button>;
       //nextButton = <button onClick={this.handleNextButton}> Next</button>;
       if (!this.state.isAllPlayersInRoom) {
@@ -102,7 +113,7 @@ export default class Game extends React.Component {
           id="timer"
           sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
           isResetNeeded={this.isTimerResetNeeded}
-          isGameRunning={this.state.isGameRunning}
+          isGameStarted={this.state.isGameStarted}
           timeToDisplay={this.state.timeToDisplay}
         />
         <Stats
@@ -159,20 +170,28 @@ export default class Game extends React.Component {
 
   componentWillUnmount() {
     this._isMounted = false;
+    this.isFetchNeeded = false;
     if (this.timeoutId) {
       (() => {
         clearTimeout(this.timeoutId);
+      })();
+    }
+    if (this.timeoutId3) {
+      (() => {
+        clearTimeout(this.timeoutId3);
       })();
     }
   }
 
   componentDidMount() {
     this._isMounted = true;
+
     //if (this.props.isUserConnected&&this._isMounted === true) this.getGamesList();
-    if (this._isMounted === true) {
-      this.fetchBoardData();
+    if (this._isMounted) {
       this.fetchIsAllPlayersIn();
-    }
+      this.fetchBoardData();
+      this.fetchIsMyTurn();
+    
 
     return fetch("/games/getCart", {
       method: "GET",
@@ -187,6 +206,7 @@ export default class Game extends React.Component {
       .then(cart => {
         this.setState({ cartMap: JSON.parse(cart).cart });
       });
+    }
   }
 
   fetchBoardDataWrapper() {
@@ -224,30 +244,66 @@ export default class Game extends React.Component {
 
   fetchIsAllPlayersIn() {
     const interval = 200; //TODO: change to 200
-    return fetch("/games/isAllPlayersIn", {
-      method: "GET",
-      credentials: "include"
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        this.timeoutId = setTimeout(this.fetchIsAllPlayersInWrapper, interval);
-
-        return response.json();
+    if (!this.state.isGameStarted) {
+      return fetch("/games/isAllPlayersIn", {
+        method: "GET",
+        credentials: "include"
       })
-      .then(isAllPlayersIn => {
-        const isAllPlayersInRoom = JSON.parse(isAllPlayersIn);
-       
-        this.setState(() => ({
-          isAllPlayersInRoom: isAllPlayersInRoom,
-          isGameRunning:isAllPlayersInRoom
-        }));
-      });
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+
+          this.timeoutId = setTimeout(
+            this.fetchIsAllPlayersInWrapper,
+            interval
+          );
+
+          return response.json();
+        })
+        .then(isAllPlayersIn => {
+          const isAllPlayersInRoom = JSON.parse(isAllPlayersIn);
+
+          this.setState(() => ({
+            isAllPlayersInRoom: isAllPlayersInRoom,
+            isGameStarted: isAllPlayersInRoom
+          }));
+        });
+    }
   }
+
+  fetchIsMyTurnWrapper() {
+    this.fetchIsMyTurn();
+  }
+
+  fetchIsMyTurn() {
+    const interval = 200; //TODO: change to 200
+   //need to update isGameDone
+    if (!this.state.isGameDone) {
+      return fetch("/games/isMyTurn", {
+        method: "GET",
+        credentials: "include"
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          this.timeoutId3 = setTimeout(this.fetchIsMyTurnWrapper, interval);
+
+          return response.json();
+        })
+        .then(isMyTurnOutput => {
+          const isMyTurn = JSON.parse(isMyTurnOutput);
+          this.setState(() => ({
+            isMyTurn: isMyTurn
+          }));
+        });
+    }
+  }
+
   /////////////////////////////////////////////////
   handleCartClick(indexCart, card) {
-    if (this.state.isGameRunning) {
+    if (this.state.isGameStarted && this.state.isMyTurn) {
       console.log("clicked" + indexCart);
       this.isTimerResetNeeded = false;
       //////////////////////////////////////////////////
@@ -287,7 +343,7 @@ export default class Game extends React.Component {
             const withdrawals = 0;
             // const withdrawals = DominoStackLogic.getNumOfWithdrawals();
             // if (DominoStackLogic.getNumOfPieces() === 0) {
-            //   this.state.isGameRunning = false;
+            //   this.state.isGameStarted = false;
             //   this.isWin = false;
             // }
             return {
@@ -511,14 +567,14 @@ export default class Game extends React.Component {
         index,
         prevState.cartMap
       );
-      let isGameRunningCopy=true;
+      let isGameStartedCopy = true;
       if (this.isCartEmpty()) {
-        isGameRunningCopy = false;
+        isGameStartedCopy = false;
         this.isWin = true;
       }
       return {
         cartMap: newCartMap,
-       isGameRunning: isGameRunningCopy
+        isGameStarted: isGameStartedCopy
       };
     });
   }
