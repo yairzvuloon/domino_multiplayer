@@ -8,7 +8,6 @@ import NewGameModal from "./NewGameModal.jsx";
 import Game from "./Game.jsx";
 import "../style/GameStyle.css";
 
-
 export default class BaseContainer extends React.Component {
   constructor(props) {
     super(props);
@@ -30,9 +29,11 @@ export default class BaseContainer extends React.Component {
     this.handleCreateRoomError = this.handleCreateRoomError.bind(this);
     this.fetchUserInfo = this.fetchUserInfo.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
-    this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
-    this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
+  //  this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
+  //  this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
     this.renderGame = this.renderGame.bind(this);
+    this.exitToLobbyHandler = this.exitToLobbyHandler.bind(this);
+    this.handleIsCurrUserInRoom=this.handleIsCurrUserInRoom.bind(this);
     this._isMounted = false;
   }
 
@@ -68,23 +69,11 @@ export default class BaseContainer extends React.Component {
 
   renderGame() {
     return (
-      <div key="gameFrame" className="gameFrame">
-     <div key="user-info-area-in-game" className="user-info-area">
-        Hello {this.state.currentUser.name}
-        <button
-          key="logout-btn-in-Game"
-          className="logout btn"
-          onClick={this.logoutHandler}
-        >
-          Logout
-        </button>
-        <h1 key="Domino-multiplayer-title-in-game">Domino multiplayer</h1>
-        <h1 key="game-room-name-title-in-game">
-          game room name:{this.state.currentRoomName}
-        </h1>
-      </div>
-     <Game/>
-      </div>
+      <Game
+        exitToLobbyHandler={this.exitToLobbyHandler}
+        name={this.state.currentUser.name}
+        handleIsCurrUserInRoom={this.handleIsCurrUserInRoom}
+      />
     );
   }
   renderLobby() {
@@ -163,6 +152,24 @@ export default class BaseContainer extends React.Component {
     );
   }
 
+  exitToLobbyHandler() {
+    fetch("/users/exitGame", { method: "GET", credentials: "include" }).then(
+      response => {
+        if (!response.ok) {
+          console.log(
+            `failed to logout user ${this.state.currentUser.name} `,
+            response
+          );
+        }
+        this.setState(() => ({
+          showGame: false,
+          showLobby: true,
+          showLogin: false
+        }));
+      }
+    );
+  }
+
   logoutHandler() {
     fetch("/users/logout", { method: "GET", credentials: "include" }).then(
       response => {
@@ -178,13 +185,13 @@ export default class BaseContainer extends React.Component {
   }
 
   componentDidMount() {
-    this._isMounted = true;
-    if (
-      this.state.currentUser.name !== undefined &&
-      this.state.currentUser.name !== "" &&
-      this._isMounted === true
-    )
-      this.isCurrUserInRoom();
+    //this._isMounted = true;
+  //  if (
+     // this.state.currentUser.name !== undefined &&
+      //this.state.currentUser.name !== "" &&
+      //this._isMounted === true
+    //)
+   //   //this.isCurrUserInRoom();
   }
 
   componentWillUnmount() {
@@ -201,39 +208,45 @@ export default class BaseContainer extends React.Component {
       currentRoomName: currentRoomName,
       showLobby: false
     }));
-    this.isCurrUserInRoom();
+    //this.isCurrUserInRoom();
   }
-  isCurrUserInRoomWrapper() {
-    this.isCurrUserInRoom();
-  }
+ 
+ // isCurrUserInRoomWrapper() {
+ //   this.isCurrUserInRoom();
+ // }
 
-  isCurrUserInRoom() {
-    const interval = 1000; //TODO: change to 200
-    if (
-      this.state.currentUser !== undefined &&
-      this.state.currentUser.name !== ""
-    ) {
-      return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
-        .then(response => {
-          if (!response.ok) {
-            throw response;
-          }
-          this.timeoutId = setTimeout(this.isCurrUserInRoomWrapper, interval);
-          return response.json();
-        })
-        .then(currRoomId => {
-          if (
-            this._isMounted &&
-            this.state.showLobby === false &&
-            JSON.parse(currRoomId).id === ""
-          )
-            this.setState(prevState => ({ showLobby: true }));
-          else return false;
-        })
-        .catch(err => {
-          throw err;
-        });
-    }
+  // isCurrUserInRoom() {
+  //   const interval = 1000; //TODO: change to 200
+  //   if (
+  //     this.state.currentUser !== undefined &&
+  //     this.state.currentUser.name !== ""
+  //   ) {
+  //     return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
+  //       .then(response => {
+  //         if (!response.ok) {
+  //           throw response;
+  //         }
+  //         this.timeoutId = setTimeout(this.isCurrUserInRoomWrapper, interval);
+  //         return response.json();
+  //       })
+  //       .then(currRoomId => {
+  //         if (
+  //           this._isMounted &&
+  //           this.state.showLobby === false &&
+  //           JSON.parse(currRoomId).id === ""
+  //         )
+  //           this.setState(prevState => ({ showGame:false, showLobby: true }));
+  //         else return false;
+  //       })
+  //       .catch(err => {
+  //         throw err;
+  //       });
+  //   }
+  // }
+
+  handleIsCurrUserInRoom()
+  {
+    this.setState(() => ({ showGame:false, showLobby: true }));
   }
 
   handleCreateRoomError() {

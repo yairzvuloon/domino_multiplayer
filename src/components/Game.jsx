@@ -24,7 +24,9 @@ const getInitialState = () => {
     isGameStarted: false,
     isGameDone: false,
     isMyTurn: false,
-    currentPlayerName:""
+    isHost: false,
+
+    currentPlayerName: ""
   };
 
   return initialState;
@@ -57,7 +59,12 @@ export default class Game extends React.Component {
     this.fetchIsMyTurn = this.fetchIsMyTurn.bind(this);
     this.fetchIsMyTurnWrapper = this.fetchIsMyTurnWrapper.bind(this);
     this.handleDrawButton = this.handleDrawButton.bind(this);
-    this.fetchGetCurrentPlayerName= this.fetchGetCurrentPlayerName.bind(this);
+    this.fetchGetCurrentPlayerName = this.fetchGetCurrentPlayerName.bind(this);
+    this.fetchIsHost = this.fetchIsHost.bind(this);
+    this.handleExitButton = this.handleExitButton.bind(this);
+    this.handleIsCurrUserInRoom = this.handleIsCurrUserInRoom.bind(this);
+    this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
+
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
@@ -91,6 +98,19 @@ export default class Game extends React.Component {
     //let newGameButton,
     //nextButton = null;
     let gameSentence = null;
+    let exitButton = null;
+    if (this.state.isHost) {
+      exitButton = (
+        <button
+          key="exit"
+          className="logout btn"
+          onClick={this.handleExitButton}
+        >
+          EXIT TO LOBBY
+        </button>
+      );
+    }
+
     if (this.state.isGameStarted) {
       if (!this.state.isMyTurn) {
         gameSentence = <p>it's {this.state.currentPlayerName} turn </p>;
@@ -98,6 +118,15 @@ export default class Game extends React.Component {
     } else {
       //newGameButton = <button onClick={this.restartGame}>newGame</button>;
       //nextButton = <button onClick={this.handleNextButton}> Next</button>;
+      exitButton = (
+        <button
+          key="exit"
+          className="logout btn"
+          onClick={this.handleExitButton}
+        >
+          EXIT TO LOBBY
+        </button>
+      );
       if (!this.state.isAllPlayersInRoom) {
         gameSentence = <p>we waiting for more players </p>;
       } else {
@@ -109,8 +138,18 @@ export default class Game extends React.Component {
       }
     }
     return (
-      <div id="homeContainer">
-        {/*<div id="statsFrame">      
+      <div key="gameFrame" className="gameFrame">
+        <div key="user-info-area-in-game" className="user-info-area">
+          Hello {this.props.name}
+          {exitButton}
+          <h1 key="Domino-multiplayer-title-in-game">Domino multiplayer</h1>
+          <h1 key="game-room-name-title-in-game">
+            game room name:{this.state.currentRoomName}
+          </h1>
+        </div>
+
+        <div id="homeContainer">
+          {/*<div id="statsFrame">      
         <Timer
           id="timer"
           sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
@@ -126,27 +165,31 @@ export default class Game extends React.Component {
           average={this.state.average}
         />
       </div>*/}
-        <div id="boardFrame">
-          <Board
-            cells={this.state.boardMap}
-            onClick={(i, j) => this.handleBoardClick(i, j)}
-          />
+          <div id="boardFrame">
+            <Board
+              cells={this.state.boardMap}
+              onClick={(i, j) => this.handleBoardClick(i, j)}
+            />
+          </div>
+          <div id="cartFrame">
+            <Cart
+              id="cartStyle"
+              cart={this.state.cartMap}
+              onClick={(i, value) => this.handleCartClick(i, value)}
+            />
+          </div>
+          {/* {newGameButton} */}
+          {drawButton}
+          {gameSentence}
         </div>
-        <div id="cartFrame">
-          <Cart
-            id="cartStyle"
-            cart={this.state.cartMap}
-            onClick={(i, value) => this.handleCartClick(i, value)}
-          />
-        </div>
-        {/* {newGameButton} */}
-        {drawButton}
-        {gameSentence}
       </div>
     );
   }
 
-  
+  handleExitButton() {
+    this.setState(() => ({ isGameDone: true }));
+    this.props.exitToLobbyHandler();
+  }
 
   handleDrawButton() {
     return fetch("/games/getCard", {
@@ -196,9 +239,52 @@ export default class Game extends React.Component {
       this.fetchBoardData();
       this.fetchIsMyTurn();
       this.fetchGetCurrentPlayerName();
-    
+      this.fetchIsHost();
+      this.isCurrUserInRoom();
 
-    return fetch("/games/getCart", {
+      return fetch("/games/getCart", {
+        method: "GET",
+        credentials: "include"
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          return response.json();
+        })
+        .then(cart => {
+          this.setState({ cartMap: JSON.parse(cart).cart });
+        });
+    }
+  }
+
+  isCurrUserInRoom() {
+    const interval = 1000; //TODO: change to 200
+    if (!this.state.isGameDone) {
+      return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          this.timeoutId = setTimeout(this.isCurrUserInRoom, interval);
+          return response.json();
+        })
+        .then(currRoomId => {
+          if (JSON.parse(currRoomId).id === "") this.handleIsCurrUserInRoom();
+        })
+        .catch(err => {
+          throw err;
+        });
+    }
+  }
+
+  handleIsCurrUserInRoom() {
+    this.setState(()=>{ isGameDone: true });
+    this.props.handleIsCurrUserInRoom();
+  }
+
+  fetchIsHost() {
+    return fetch("/games/isHost", {
       method: "GET",
       credentials: "include"
     })
@@ -208,13 +294,12 @@ export default class Game extends React.Component {
         }
         return response.json();
       })
-      .then(cart => {
-        this.setState({ cartMap: JSON.parse(cart).cart });
+      .then(isUserHost => {
+        this.setState({ isHost: JSON.parse(isUserHost) });
       });
-    }
   }
 
-  fetchGetCurrentPlayerName(){
+  fetchGetCurrentPlayerName() {
     const interval = 1000; //TODO: change to 200
     if (!this.state.isGameDone) {
       return fetch("/games/getCurrentPlayerName", {
@@ -226,20 +311,17 @@ export default class Game extends React.Component {
             throw response;
           }
 
-          this.timeoutId = setTimeout(
-            this.fetchGetCurrentPlayerName,
-            interval
-          );
+          this.timeoutId = setTimeout(this.fetchGetCurrentPlayerName, interval);
 
           return response.json();
         })
         .then(currentPlayerName => {
           this.setState(() => ({
-            currentPlayerName:JSON.parse(currentPlayerName)
+            currentPlayerName: JSON.parse(currentPlayerName)
           }));
         });
+    }
   }
-}
 
   fetchBoardDataWrapper() {
     this.fetchBoardData();
@@ -247,27 +329,29 @@ export default class Game extends React.Component {
 
   fetchBoardData() {
     const interval = 1000; //TODO: change to 200
-    return fetch("/games/getValidLocations", {
-      method: "GET",
-      credentials: "include"
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        this.timeoutId = setTimeout(this.fetchBoardDataWrapper, interval);
-
-        return response.json();
+    if (!this.state.isGameDone) {
+      return fetch("/games/getValidLocations", {
+        method: "GET",
+        credentials: "include"
       })
-      .then(serverOutput => {
-        const validLocationsArray = JSON.parse(serverOutput)
-          .validLocationsArray;
-        const newBoardMap = JSON.parse(serverOutput).boardMap;
-        this.setState(() => ({
-          boardMap: newBoardMap,
-          validLocationsArray: validLocationsArray
-        }));
-      });
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          this.timeoutId = setTimeout(this.fetchBoardDataWrapper, interval);
+
+          return response.json();
+        })
+        .then(serverOutput => {
+          const validLocationsArray = JSON.parse(serverOutput)
+            .validLocationsArray;
+          const newBoardMap = JSON.parse(serverOutput).boardMap;
+          this.setState(() => ({
+            boardMap: newBoardMap,
+            validLocationsArray: validLocationsArray
+          }));
+        });
+    }
   }
 
   fetchIsAllPlayersInWrapper() {
@@ -310,7 +394,7 @@ export default class Game extends React.Component {
 
   fetchIsMyTurn() {
     const interval = 1000; //TODO: change to 200
-   //need to update isGameDone
+    //need to update isGameDone
     if (!this.state.isGameDone) {
       return fetch("/games/isMyTurn", {
         method: "GET",

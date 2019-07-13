@@ -68,9 +68,16 @@ function getValidLocations(req, res, next) {
 }
 
 function removeGameFromGamesList(req, res, next) {
-  if (gamesList[req.session.id] !== undefined) {
+  const gameData = gamesList[req.session.id];
+  
+  if ( gameData!== undefined) {
+    for (var i = 0; i < gameData.numberOfSubscribes; i++)
+    {  
+      userRoomId[gameData.subscribesIdStrings[i]]=undefined;
+    }
     delete gamesList[req.session.id];
   }
+ 
   next();
 }
 
@@ -117,8 +124,8 @@ function getMyRoomId(req) {
   return JSON.stringify({ id: "", subscribesIdStringsIndex: "" });
 }
 
-function isUserHost(userId) {
-  return gamesList[userId] !== undefined;
+function isHost(req) {
+  return  JSON.stringify(gamesList[req.session.id] !== undefined);
 }
 
 function isUserInRoom(req, res, next) {
@@ -279,5 +286,6 @@ module.exports = {
   isAllPlayersIn,
   isMyTurn,
   moveToNextTurn,
-  getCurrentPlayer
+  getCurrentPlayer,
+  isHost
 };

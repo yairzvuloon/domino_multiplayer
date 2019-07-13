@@ -95,4 +95,14 @@ gamesListManagement.get(
   }
 );
 
+gamesListManagement.get(
+  "/isHost",
+  auth.userAuthentication,
+  games.isUserInRoom,
+  (req, res) => {
+    let isHost = games.isHost(req);
+    res.status(200).json(isHost);
+  }
+);
+
 module.exports = gamesListManagement;

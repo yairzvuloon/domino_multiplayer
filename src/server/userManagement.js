@@ -30,12 +30,26 @@ userManagement.get("/logout", [
     chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
-  games.removeUserFromGame,
-  games.removeGameFromGamesList,
+  //games.removeUserFromGame,
+  //games.removeGameFromGamesList,
   auth.removeUserFromAuthList,
   (req, res) => {
     res.sendStatus(200);
   }
 ]);
+
+userManagement.get("/exitGame", [
+  (req, res, next) => {
+    const userInfo = auth.getUserInfo(req.session.id);
+    chatManagement.appendUserLogoutMessage(userInfo);
+    next();
+  },
+  games.removeUserFromGame,
+  games.removeGameFromGamesList,
+  (req, res) => {
+    res.sendStatus(200);
+  }
+]);
+
 
 module.exports = userManagement;
