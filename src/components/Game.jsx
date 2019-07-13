@@ -215,7 +215,7 @@ export default class Game extends React.Component {
   }
 
   fetchGetCurrentPlayerName(){
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
     if (!this.state.isGameDone) {
       return fetch("/games/getCurrentPlayerName", {
         method: "GET",
@@ -246,7 +246,7 @@ export default class Game extends React.Component {
   }
 
   fetchBoardData() {
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
     return fetch("/games/getValidLocations", {
       method: "GET",
       credentials: "include"
@@ -275,7 +275,7 @@ export default class Game extends React.Component {
   }
 
   fetchIsAllPlayersIn() {
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
     if (!this.state.isGameStarted) {
       return fetch("/games/isAllPlayersIn", {
         method: "GET",
@@ -309,7 +309,7 @@ export default class Game extends React.Component {
   }
 
   fetchIsMyTurn() {
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
    //need to update isGameDone
     if (!this.state.isGameDone) {
       return fetch("/games/isMyTurn", {

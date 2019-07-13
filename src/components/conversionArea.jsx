@@ -48,7 +48,7 @@ export default class ConversionArea extends React.Component {
     this.getChatContent();
   }
   getChatContent() {
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
     return fetch("/chat", { method: "GET", credentials: "include" })
       .then(response => {
         if (!response.ok) {

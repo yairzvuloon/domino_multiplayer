@@ -208,7 +208,7 @@ export default class BaseContainer extends React.Component {
   }
 
   isCurrUserInRoom() {
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
     if (
       this.state.currentUser !== undefined &&
       this.state.currentUser.name !== ""

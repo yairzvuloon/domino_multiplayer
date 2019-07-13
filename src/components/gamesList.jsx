@@ -33,7 +33,7 @@ export default class GamesList extends React.Component {
     this.getGamesList();
   }
   getGamesList() {
-    const interval = 200; //TODO: change to 200
+    const interval = 1000; //TODO: change to 200
     return fetch("/games/allGames", { method: "GET", credentials: "include" })
       .then(response => {
         if (!response.ok) {
