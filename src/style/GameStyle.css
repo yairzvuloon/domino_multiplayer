@@ -1,6 +1,8 @@
-#homeContainer {
+
+#gameAndDataFlex
+{
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   top: 0;
@@ -9,8 +11,25 @@
   margin: auto;
 }
 
+.roomText{
+  width: 29vh;
+  height: 3vh;
+}
+#gameFrame {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  height: 81vh;
+}
+
+
 #boardFrame {
-  width: 100vw;
+  width: 59vw;
   height: 23vw;
   overflow: scroll;
   /*margin-left: 100%;
@@ -18,8 +37,9 @@ margin-right: 100%;*/
 }
 #cartFrame {
   max-width: 50vw;
+  height: 11vh;
   width: 50vw;
-  overflow: scroll;
+  overflow: auto;
 }
 #cartStyle {
   max-width: 10vw;

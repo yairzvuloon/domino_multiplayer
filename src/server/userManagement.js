@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("./auth");
-const chatManagement = require("./chat");
 const games= require("./games")
 
 const userManagement = express.Router();
@@ -27,7 +26,7 @@ userManagement.post("/addUser", auth.addUserToAuthList, (req, res) => {
 userManagement.get("/logout", [
   (req, res, next) => {
     const userInfo = auth.getUserInfo(req.session.id);
-    chatManagement.appendUserLogoutMessage(userInfo);
+    //chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
   //games.removeUserFromGame,
@@ -41,7 +40,7 @@ userManagement.get("/logout", [
 userManagement.get("/exitGame", [
   (req, res, next) => {
     const userInfo = auth.getUserInfo(req.session.id);
-    chatManagement.appendUserLogoutMessage(userInfo);
+    //chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
   games.removeUserFromGame,

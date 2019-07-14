@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const userManagement = require('./server/userManagement');
 const gamesListManagement = require('./server/gamesListManagement');
 //const auth = require('./server/auth');
-const chatManagement = require('./server/chat');
+const chatManagement = require('./server/chatManagement');
 const app = express();
 
 app.use(session({ secret: 'keyboard cat', cookie: {maxAge:269999999999}}));

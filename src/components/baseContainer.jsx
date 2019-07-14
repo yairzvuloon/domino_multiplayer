@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import LoginModal from "./LoginModal.jsx";
-import ChatContainer from "./ChatContainer.jsx";
+//import ChatContainer from "./ChatContainer.jsx";
 import UsersList from "./UsersList.jsx";
 import GamesList from "./GamesList.jsx";
 import NewGameModal from "./NewGameModal.jsx";
@@ -73,6 +73,7 @@ export default class BaseContainer extends React.Component {
         exitToLobbyHandler={this.exitToLobbyHandler}
         name={this.state.currentUser.name}
         handleIsCurrUserInRoom={this.handleIsCurrUserInRoom}
+        currentRoomName={this.state.currentRoomName}
       />
     );
   }
@@ -116,7 +117,6 @@ export default class BaseContainer extends React.Component {
             <UsersList key="UsersList-lobby" />
           </div>
         </div>
-        <ChatContainer key="ChatContainer-lobby" />
       </div>
     );
   }
@@ -195,12 +195,7 @@ export default class BaseContainer extends React.Component {
   }
 
   componentWillUnmount() {
-    this._isMounted = false;
-    if (this.timeoutId) {
-      (() => {
-        clearTimeout(this.timeoutId);
-      })();
-    }
+   
   }
 
   handleSucceedCreateNewRoom(currentRoomName) {

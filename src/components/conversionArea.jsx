@@ -15,8 +15,8 @@ export default class ConversionArea extends React.Component {
 
   componentDidMount() {
     this._isMounted = true;
-    console.log(this.props.isUserConnected);
-    //if (this.props.isUserConnected && this._isMounted === true)
+    //console.log(this.props.isUserConnected);
+    if ( this._isMounted === true)
     if (this._isMounted === true) this.getChatContent();
   }
 
@@ -36,8 +36,8 @@ export default class ConversionArea extends React.Component {
         className="converssion-area-wrpper"
       >
         {this.state.content.map((line, value) => (
-          <p key={JSON.parse(line.user).name + value}>
-            {JSON.parse(line.user).name}: {line.text}
+          <p key={value}>
+            {line.user}: {line.text}
           </p>
         ))}
       </div>
@@ -47,8 +47,11 @@ export default class ConversionArea extends React.Component {
   getChatContentWrapper() {
     this.getChatContent();
   }
+  
   getChatContent() {
     const interval = 1000; //TODO: change to 200
+   if(this.props.isUserConnected) 
+   {
     return fetch("/chat", { method: "GET", credentials: "include" })
       .then(response => {
         if (!response.ok) {
@@ -63,5 +66,6 @@ export default class ConversionArea extends React.Component {
       .catch(err => {
         throw err;
       });
+    }
   }
 }

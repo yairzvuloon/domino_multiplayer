@@ -6,6 +6,9 @@ import Timer from "../components/Timer.jsx";
 import Stats from "../components/Stats.jsx";
 const Manager = require("../utilities/Manager");
 import "../style/GameStyle.css";
+import "../style/style2.css";
+
+import ChatContainer from "./ChatContainer.jsx";
 
 const getInitialState = () => {
   const initialBoard = Manager.setInitialBoard(57);
@@ -94,7 +97,7 @@ export default class Game extends React.Component {
     //this.redoMoves = new Array(0);
   }
   render() {
-    const drawButton = <button onClick={this.handleDrawButton}> Draw</button>;
+    const drawButton = <button className="btn" onClick={this.handleDrawButton}> Draw</button>;
     //let newGameButton,
     //nextButton = null;
     let gameSentence = null;
@@ -138,17 +141,22 @@ export default class Game extends React.Component {
       }
     }
     return (
-      <div key="gameFrame" className="gameFrame">
+      <div key="homeContainer" id="homeContainer">
+        
         <div key="user-info-area-in-game" className="user-info-area">
           Hello {this.props.name}
           {exitButton}
-          <h1 key="Domino-multiplayer-title-in-game">Domino multiplayer</h1>
-          <h1 key="game-room-name-title-in-game">
-            game room name:{this.state.currentRoomName}
-          </h1>
         </div>
-
-        <div id="homeContainer">
+       
+        <div id="gameAndDataFlex">
+        <div id="roomData">
+          <p className="roomText" key="game-room-name-title-in-game">
+            game room name:{this.props.currentRoomName}
+          </p>
+          <ChatContainer isUserConnected={!this.state.isGameDone}key="ChatContainer-lobby" />
+        </div>
+        
+        <div id="gameFrame">
           {/*<div id="statsFrame">      
         <Timer
           id="timer"
@@ -178,16 +186,18 @@ export default class Game extends React.Component {
               onClick={(i, value) => this.handleCartClick(i, value)}
             />
           </div>
-          {/* {newGameButton} */}
           {drawButton}
+          {/* {newGameButton} */}
           {gameSentence}
         </div>
+        </div>
       </div>
+
     );
   }
 
   handleExitButton() {
-    this.setState(() => ({ isGameDone: true }));
+    this.setState(() => ({ isGameStarted: false, isGameDone: true }));
     this.props.exitToLobbyHandler();
   }
 
@@ -279,7 +289,10 @@ export default class Game extends React.Component {
   }
 
   handleIsCurrUserInRoom() {
-    this.setState(()=>{ isGameDone: true });
+    this.setState(() => ({
+      isGameStarted:false,
+      isGameDone:true
+    }));
     this.props.handleIsCurrUserInRoom();
   }
 

@@ -1,28 +1,32 @@
-const express = require('express');
-const router = express.Router();
-const bodyParser = require('body-parser');
-const auth = require('./auth');
+const games = require("./games");
 
-const chatContent = [];
+const chatContentList = {};
 
-const chatManagement = express.Router();
-
-chatManagement.use(bodyParser.text());
-
-chatManagement.route('/')
-	.get(auth.userAuthentication, (req, res) => {		
-		res.json(chatContent);
-	})
-	.post(auth.userAuthentication, (req, res) => {		
-        const body = req.body;
-        const userInfo =  JSON.parse(auth.getUserInfo(req.session.id)).name;
-        chatContent.push({user: userInfo, text: body});        
-        res.sendStatus(200);
-	});
-
-chatManagement.appendUserLogoutMessage = function(userInfo) {
-	chatContent.push({user: userInfo, text: `user had logout`}); 
+function getChatRoomContent(myRoomId) {
+  if (chatContentList[myRoomId] === undefined) {
+    return [];
+  } else {
+    return chatContentList[myRoomId];
+  }
 }
 
+function initialChatRoom(myRoomId) {
+  if (chatContentList[myRoomId] === undefined) {
+    chatContentList[myRoomId] = [];
+  }
+}
 
-module.exports = chatManagement;
+function pushContentToRoom(content, id) {
+  chatContentList[id].push(content);
+}
+
+function removeChatRoom(myRoomId) {
+  chatContentList[myRoomId] = undefined;
+}
+
+module.exports = {
+  getChatRoomContent,
+  initialChatRoom,
+  pushContentToRoom,
+  removeChatRoom
+};

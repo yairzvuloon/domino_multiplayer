@@ -1,5 +1,8 @@
 const Manager = require("../utilities/Manager");
 const auth = require("./auth");
+const chat = require("./chat");
+
+
 
 const gamesList = {};
 const userRoomId = {};
@@ -47,11 +50,17 @@ function getGamesList() {
 function getValidLocations(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
-
+if(gameData!==undefined)
   return JSON.stringify({
     boardMap: gameData.boardMap,
     validLocationsArray: gameData.validLocationsArray
   });
+  else{
+    return JSON.stringify({
+      boardMap:[],
+      validLocationsArray: []
+    });
+  }
 
   // for (let i = 0; i < gameData.validLocationsArray[side1].length; i++) {
 
@@ -75,6 +84,7 @@ function removeGameFromGamesList(req, res, next) {
     {  
       userRoomId[gameData.subscribesIdStrings[i]]=undefined;
     }
+    chat.removeChatRoom(req.session.id);
     delete gamesList[req.session.id];
   }
  
@@ -93,6 +103,7 @@ function removeUserFromGame(req, res, next) {
       gamesList[roomId].subscribesIdStrings.splice(index, 1);
       gamesList[roomId].numberOfSubscribes--;
       userRoomId[req.session.id] = undefined;
+
       //gameData.subscribesIdStrings.splice(index, 1);
       // gameData.numberOfSubscribes--;
       // gamesList[roomId] = JSON.stringify(gameData);
@@ -237,9 +248,15 @@ function getCard(req) {
 function isAllPlayersIn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
+ if(gameData!==undefined)
+ {
   return JSON.stringify(
     gameData.numberOfSubscribes === JSON.parse(gameData.numPlayerToStart)
   );
+ }
+ else{
+   return "false";
+ }
 }
 
 function moveToNextTurn(req, res, next) {
@@ -258,16 +275,26 @@ function moveToNextTurn(req, res, next) {
 function isMyTurn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
+  if(gameData!==undefined){
   const indexPlayer = gameData.currentPlayerIndex;
+  
   return req.session.id === gameData.subscribesIdStrings[indexPlayer];
+  }
+  else
+  return false;
 }
 
 function getCurrentPlayer(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
+ if(gameData!==undefined)
+ {
   const indexPlayer = gameData.currentPlayerIndex;
   const currentPlayerId = gameData.subscribesIdStrings[indexPlayer];
+ 
   return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
+ }
+ else return " ";
 }
 
 module.exports = {

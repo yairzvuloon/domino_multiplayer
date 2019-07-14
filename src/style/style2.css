@@ -42,7 +42,9 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding-top: 50vh;   
+    padding-top: 2vh;
+    height: 24vh;
+    width: 52vh;
 }
 .chat-container .converssion-area-wrpper {
     border: 1px solid #ccc;
