@@ -94,10 +94,6 @@ export default class Game extends React.Component {
     this.isTimerResetNeeded = false;
     this._isMounted = false;
     this.isCurrentUserGotCart = false;
-
-    ////////////////////////////////////////
-    //this.movesHistory = new Array(0);
-    //this.redoMoves = new Array(0);
   }
   render() {
     const drawButton = (
@@ -107,7 +103,6 @@ export default class Game extends React.Component {
       </button>
     );
     //let newGameButton,
-    //nextButton = null;
     let gameSentence = null;
     let removeButton = null;
     let exitButton = null;
@@ -125,7 +120,7 @@ export default class Game extends React.Component {
     }
 
     if (
-      (this.state.isHost && !this.state.isAllPlayersInRoom) ||
+      (this.state.isHost && this.state.numberOfSubscribes===1) ||
       this.state.isGameDone
     ) {
       removeButton = (
@@ -172,12 +167,23 @@ export default class Game extends React.Component {
             <p className="roomText" key="game-room-name-title-in-game">
               game room name:{this.props.currentRoomName}
             </p>
-            {
+            <p className="roomText" key="game-room-name-title-in-game">
+              users in room:
+            </p>
+
+            <ul key="gameUsersList">
+          {Object.keys(this.state.usersNamesInGame).map((id, index) => (
+            <li key={this.state.usersNamesInGame[id].name + index}>
+              {this.state.usersNamesInGame[id].name}
+            </li>
+          ))}
+        </ul>
+            
               <ChatContainer
                 isUserConnected={!this.state.isGameDone}
                 key="ChatContainer-lobby"
               />
-            }
+            
           </div>
 
           <div id="gameFrame">
@@ -452,7 +458,7 @@ export default class Game extends React.Component {
             isAllPlayersInRoom: isAllPlayersInRoom.isAllPlayersIn,
             isGameStarted: isAllPlayersInRoom.isAllPlayersIn,
             numberOfSubscribes: isAllPlayersInRoom.numberOfSubscribes,
-            usersNamesInGame: isAllPlayersInRoom.names
+            usersNamesInGame:[...isAllPlayersInRoom.names] 
           }));
         });
     }

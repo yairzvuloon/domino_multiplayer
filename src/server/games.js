@@ -263,7 +263,7 @@ function moveToNextTurn(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   const indexPlayer = gameData.currentPlayerIndex;
-  if (req.session.id === gameData.subscribesIdStrings[indexPlayer]) {
+  if (req.session.id === gameData.subscribesIdStrings[indexPlayer].id) {
     if (indexPlayer + 1 === JSON.parse(gameData.numPlayerToStart)) {
       gameData.currentPlayerIndex = 0;
     } else {
