@@ -2,8 +2,6 @@ const Manager = require("../utilities/Manager");
 const auth = require("./auth");
 const chat = require("./chat");
 
-
-
 const gamesList = {};
 const userRoomId = {};
 
@@ -29,15 +27,17 @@ function addGameToGamesList(req, res, next) {
 
     const obj = JSON.parse(req.body);
     obj.id = req.session.id;
-    obj.subscribesIdStrings[0] = req.session.id;
-    userRoomId[req.session.id] = {
-      id: req.session.id,
-      subscribesIdStringsIndex: 0
-    };
+    // obj.subscribesIdStrings[0] = req.session.id;
+    // userRoomId[req.session.id] = {
+    //   id: req.session.id,
+    //   subscribesIdStringsIndex: 0
+    // };
     obj.DominoStackLogic = new Manager.DominoStack();
     obj.validLocationsArray = createEmptyValidLocations();
     obj.boardMap = Manager.setInitialBoard(57);
+    obj.numPlayerToStart=JSON.parse(obj.numPlayerToStart);
     obj.currentPlayerIndex = 0;
+    obj.numberOfSubscribes = 0;
     gamesList[req.session.id] = obj;
     next();
   }
@@ -50,14 +50,14 @@ function getGamesList() {
 function getValidLocations(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
-if(gameData!==undefined)
-  return JSON.stringify({
-    boardMap: gameData.boardMap,
-    validLocationsArray: gameData.validLocationsArray
-  });
-  else{
+  if (gameData !== undefined)
     return JSON.stringify({
-      boardMap:[],
+      boardMap: gameData.boardMap,
+      validLocationsArray: gameData.validLocationsArray
+    });
+  else {
+    return JSON.stringify({
+      boardMap: [],
       validLocationsArray: []
     });
   }
@@ -77,17 +77,20 @@ if(gameData!==undefined)
 }
 
 function removeGameFromGamesList(req, res, next) {
-  const gameData = gamesList[req.session.id];
-  
-  if ( gameData!== undefined) {
-    for (var i = 0; i < gameData.numberOfSubscribes; i++)
-    {  
-      userRoomId[gameData.subscribesIdStrings[i]]=undefined;
+  const roomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = roomIdObj.id;
+  // const index = roomIdObj.subscribesIdStringsIndex;
+  const gameData = gamesList[roomId];
+  removeUserFromGame(req, res, next);
+
+  if (gameData !== undefined) {
+    for (var i = 0; i < gameData.numberOfSubscribes; i++) {
+      userRoomId[gameData.subscribesIdStrings[i]] = undefined;
     }
-    chat.removeChatRoom(req.session.id);
-    delete gamesList[req.session.id];
+    chat.removeChatRoom(roomId);
+    delete gamesList[roomId];
   }
- 
+
   next();
 }
 
@@ -136,7 +139,7 @@ function getMyRoomId(req) {
 }
 
 function isHost(req) {
-  return  JSON.stringify(gamesList[req.session.id] !== undefined);
+  return JSON.stringify(gamesList[req.session.id] !== undefined);
 }
 
 function isUserInRoom(req, res, next) {
@@ -158,11 +161,9 @@ function addUserToGame(req, res, next) {
       id: roomID,
       subscribesIdStringsIndex: gamesList[roomID].numberOfSubscribes
     };
-    gamesList[roomID].numberOfSubscribes++;
-
-    // gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
-    // gameData.numberOfSubscribes++;
-    // gamesList[roomID] = JSON.stringify(gameData);
+    gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
+    gameData.numberOfSubscribes++;
+    gamesList[roomID] = gameData;
     next();
   }
 }
@@ -248,15 +249,13 @@ function getCard(req) {
 function isAllPlayersIn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
- if(gameData!==undefined)
- {
-  return JSON.stringify(
-    gameData.numberOfSubscribes === JSON.parse(gameData.numPlayerToStart)
-  );
- }
- else{
-   return "false";
- }
+  if (gameData !== undefined) {
+    return JSON.stringify(
+      gameData.numberOfSubscribes === gameData.numPlayerToStart
+    );
+  } else {
+    return "false";
+  }
 }
 
 function moveToNextTurn(req, res, next) {
@@ -275,26 +274,22 @@ function moveToNextTurn(req, res, next) {
 function isMyTurn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
-  if(gameData!==undefined){
-  const indexPlayer = gameData.currentPlayerIndex;
-  
-  return req.session.id === gameData.subscribesIdStrings[indexPlayer];
-  }
-  else
-  return false;
+  if (gameData !== undefined) {
+    const indexPlayer = gameData.currentPlayerIndex;
+
+    return req.session.id === gameData.subscribesIdStrings[indexPlayer];
+  } else return false;
 }
 
 function getCurrentPlayer(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
- if(gameData!==undefined)
- {
-  const indexPlayer = gameData.currentPlayerIndex;
-  const currentPlayerId = gameData.subscribesIdStrings[indexPlayer];
- 
-  return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
- }
- else return  JSON.stringify("");
+  if (gameData !== undefined) {
+    const indexPlayer = gameData.currentPlayerIndex;
+    const currentPlayerId = gameData.subscribesIdStrings[indexPlayer];
+
+    return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
+  } else return JSON.stringify("");
 }
 
 module.exports = {

@@ -65,8 +65,10 @@ export default class Game extends React.Component {
     this.fetchGetCurrentPlayerName = this.fetchGetCurrentPlayerName.bind(this);
     this.fetchIsHost = this.fetchIsHost.bind(this);
     this.handleExitButton = this.handleExitButton.bind(this);
+    this.handleRemoveButton = this.handleRemoveButton.bind(this);
     this.handleIsCurrUserInRoom = this.handleIsCurrUserInRoom.bind(this);
     this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
+    this.fetchCart = this.fetchCart.bind(this);
 
     //this.restartGame = this.restartGame.bind(this);
 
@@ -90,6 +92,7 @@ export default class Game extends React.Component {
     this.lastPieceTime = { minutes: 0, seconds: 0 };
     this.isTimerResetNeeded = false;
     this._isMounted = false;
+    this.isCurrentUserGotCart = false;
 
     ////////////////////////////////////////
     //this.movesHistory = new Array(0);
@@ -105,15 +108,32 @@ export default class Game extends React.Component {
     //let newGameButton,
     //nextButton = null;
     let gameSentence = null;
+    let removeButton = null;
     let exitButton = null;
-    if (this.state.isHost) {
+
+    if (!this.state.isAllPlayersInRoom || this.state.isGameDone) {
       exitButton = (
         <button
           key="exit"
           className="logout btn"
           onClick={this.handleExitButton}
         >
-          EXIT TO LOBBY
+          exit
+        </button>
+      );
+    }
+
+    if (
+      (this.state.isHost && !this.state.isAllPlayersInRoom) ||
+      this.state.isGameDone
+    ) {
+      removeButton = (
+        <button
+          key="exitAndRemove"
+          className="logout btn"
+          onClick={this.handleRemoveButton}
+        >
+          remove game
         </button>
       );
     }
@@ -123,15 +143,11 @@ export default class Game extends React.Component {
         gameSentence = <p>it's {this.state.currentPlayerName} turn </p>;
       }
     } else {
-      exitButton = (
-        <button
-          key="exit"
-          className="logout btn"
-          onClick={this.handleExitButton}
-        >
-          EXIT TO LOBBY
-        </button>
-      );
+      // removeButton = (
+      //   <button key="exit" className="logout btn" onClick={this.handleRemoveButton}>
+      //     remove game
+      //   </button>
+      // );
       if (!this.state.isAllPlayersInRoom) {
         gameSentence = <p>we waiting for more players </p>;
       } else {
@@ -147,6 +163,7 @@ export default class Game extends React.Component {
         <div key="user-info-area-in-game" className="user-info-area">
           Hello {this.props.name}
           {exitButton}
+          {removeButton}
         </div>
 
         <div id="gameAndDataFlex">
@@ -165,12 +182,12 @@ export default class Game extends React.Component {
           <div id="gameFrame">
             <div id="statsFrame">
               <Timer
-          id="timer"
-          sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
-          isResetNeeded={this.isTimerResetNeeded}
-          isGameStarted={this.state.isGameStarted}
-          //timeToDisplay={this.state.timeToDisplay}
-            />
+                id="timer"
+                sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
+                isResetNeeded={this.isTimerResetNeeded}
+                isGameStarted={this.state.isGameStarted}
+                //timeToDisplay={this.state.timeToDisplay}
+              />
               <Stats
                 id="statistics"
                 currentScore={this.state.currentScore}
@@ -200,7 +217,7 @@ export default class Game extends React.Component {
       </div>
     );
   }
- 
+
   getTurnDuration() {
     const turnLength = {
       minutes: this.currentTime.minutes - this.lastPieceTime.minutes,
@@ -209,7 +226,7 @@ export default class Game extends React.Component {
 
     return turnLength;
   }
- 
+
   saveCurrentTime(m, s) {
     this.currentTime = { minutes: m, seconds: s };
   }
@@ -219,30 +236,37 @@ export default class Game extends React.Component {
     this.props.exitToLobbyHandler();
   }
 
+  handleRemoveButton() {
+    this.setState(() => ({ isGameStarted: false, isGameDone: true }));
+    this.props.removeAndExitHandler();
+  }
+
   handleDrawButton() {
-    return fetch("/games/getCard", {
-      method: "GET",
-      credentials: "include"
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        return response.json();
+    if (this.state.isGameStarted) {
+      return fetch("/games/getCard", {
+        method: "GET",
+        credentials: "include"
       })
-      .then(domino => {
-        this.setState(prevState => {
-          const cartMap = [...prevState.cartMap];
-          let prevWithdrawals = prevState.withdrawals;
-          if (domino) {
-            cartMap.push(JSON.parse(domino).card);
-            prevWithdrawals++;
-            //     numOfTurnsToAdd++;
-            //   }
+        .then(response => {
+          if (!response.ok) {
+            throw response;
           }
-          return { withdrawals: prevWithdrawals, cartMap: cartMap };
+          return response.json();
+        })
+        .then(domino => {
+          this.setState(prevState => {
+            const cartMap = [...prevState.cartMap];
+            let prevWithdrawals = prevState.withdrawals;
+            if (domino) {
+              cartMap.push(JSON.parse(domino).card);
+              prevWithdrawals++;
+              //     numOfTurnsToAdd++;
+              //   }
+            }
+            return { withdrawals: prevWithdrawals, cartMap: cartMap };
+          });
         });
-      });
+    }
   }
 
   componentWillUnmount() {
@@ -276,21 +300,23 @@ export default class Game extends React.Component {
       this.fetchGetCurrentPlayerName();
       this.fetchIsHost();
       this.isCurrUserInRoom();
-
-      return fetch("/games/getCart", {
-        method: "GET",
-        credentials: "include"
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw response;
-          }
-          return response.json();
-        })
-        .then(cart => {
-          this.setState({ cartMap: JSON.parse(cart).cart });
-        });
     }
+  }
+
+  fetchCart() {
+    return fetch("/games/getCart", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
+      })
+      .then(cart => {
+        this.setState({ cartMap: JSON.parse(cart).cart });
+      });
   }
 
   isCurrUserInRoom() {
@@ -426,6 +452,10 @@ export default class Game extends React.Component {
             isGameStarted: isAllPlayersInRoom
           }));
         });
+    }
+
+    if (!this.isCurrentUserGotCart && this.state.isAllPlayersInRoom) {
+      this.fetchCart();
     }
   }
 
@@ -601,7 +631,7 @@ export default class Game extends React.Component {
       const { side1, side2 } = this.state.selectedCard["value"];
       //need to fix it for stats//
       ///////////////////////////
-     // let averageTurnInSecsToAdd = this.getAverageDiffInSecs();
+      // let averageTurnInSecsToAdd = this.getAverageDiffInSecs();
 
       let neighborsObj = this.getNeighborsObj(row, col);
       let card = new Manager.Card(false, side1, side2, true);
@@ -717,7 +747,7 @@ export default class Game extends React.Component {
       return {
         boardMap: newBoardMap,
         currentScore: newScore,
-        turn: newTurn ,
+        turn: newTurn,
         average: average
       };
     });

@@ -37,14 +37,25 @@ userManagement.get("/logout", [
   }
 ]);
 
-userManagement.get("/exitGame", [
+userManagement.get("/removeGame", [
+  (req, res, next) => {
+    const userInfo = auth.getUserInfo(req.session.id);
+    //chatManagement.appendUserLogoutMessage(userInfo);
+    next();
+  },
+  games.removeGameFromGamesList,
+  (req, res) => {
+    res.sendStatus(200);
+  }
+]);
+
+userManagement.get("/exit", [
   (req, res, next) => {
     const userInfo = auth.getUserInfo(req.session.id);
     //chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
   games.removeUserFromGame,
-  games.removeGameFromGamesList,
   (req, res) => {
     res.sendStatus(200);
   }

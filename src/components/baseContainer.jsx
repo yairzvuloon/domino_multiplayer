@@ -29,11 +29,13 @@ export default class BaseContainer extends React.Component {
     this.handleCreateRoomError = this.handleCreateRoomError.bind(this);
     this.fetchUserInfo = this.fetchUserInfo.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
-  //  this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
-  //  this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
+    //  this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
+    //  this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
     this.renderGame = this.renderGame.bind(this);
+    this.removeAndExitToLobbyHandler = this.removeAndExitToLobbyHandler.bind(this);
+    this.handleIsCurrUserInRoom = this.handleIsCurrUserInRoom.bind(this);
+    this.handleSucceedJoinToRoom = this.handleSucceedJoinToRoom.bind(this);
     this.exitToLobbyHandler = this.exitToLobbyHandler.bind(this);
-    this.handleIsCurrUserInRoom=this.handleIsCurrUserInRoom.bind(this);
     this._isMounted = false;
   }
 
@@ -70,6 +72,7 @@ export default class BaseContainer extends React.Component {
   renderGame() {
     return (
       <Game
+        removeAndExitHandler={this.removeAndExitToLobbyHandler}
         exitToLobbyHandler={this.exitToLobbyHandler}
         name={this.state.currentUser.name}
         handleIsCurrUserInRoom={this.handleIsCurrUserInRoom}
@@ -109,7 +112,7 @@ export default class BaseContainer extends React.Component {
           <div key="games-list-area-lobby" className="games-list-area">
             <GamesList
               key="GamesList-lobby"
-              handleJoinToGame={this.handleSucceedCreateNewRoom}
+              handleJoinToGame={this.handleSucceedJoinToRoom}
             />
           </div>
 
@@ -152,8 +155,26 @@ export default class BaseContainer extends React.Component {
     );
   }
 
+  removeAndExitToLobbyHandler() {
+    fetch("/users/removeGame", { method: "GET", credentials: "include" }).then(
+      response => {
+        if (!response.ok) {
+          console.log(
+            `failed to logout user ${this.state.currentUser.name} `,
+            response
+          );
+        }
+        this.setState(() => ({
+          showGame: false,
+          showLobby: true,
+          showLogin: false
+        }));
+      }
+    );
+  }
+
   exitToLobbyHandler() {
-    fetch("/users/exitGame", { method: "GET", credentials: "include" }).then(
+    fetch("/users/exit", { method: "GET", credentials: "include" }).then(
       response => {
         if (!response.ok) {
           console.log(
@@ -186,25 +207,33 @@ export default class BaseContainer extends React.Component {
 
   componentDidMount() {
     //this._isMounted = true;
-  //  if (
-     // this.state.currentUser.name !== undefined &&
-      //this.state.currentUser.name !== "" &&
-      //this._isMounted === true
+    //  if (
+    // this.state.currentUser.name !== undefined &&
+    //this.state.currentUser.name !== "" &&
+    //this._isMounted === true
     //)
-   //   //this.isCurrUserInRoom();
+    //   //this.isCurrUserInRoom();
   }
-  
+
   handleSucceedCreateNewRoom(currentRoomName) {
+    this.setState(() => ({
+      currentRoomName: currentRoomName,
+      showLobby: true
+    }));
+    //this.isCurrUserInRoom();
+  }
+
+  handleSucceedJoinToRoom(currentRoomName) {
     this.setState(() => ({
       currentRoomName: currentRoomName,
       showLobby: false
     }));
     //this.isCurrUserInRoom();
   }
- 
- // isCurrUserInRoomWrapper() {
- //   this.isCurrUserInRoom();
- // }
+
+  // isCurrUserInRoomWrapper() {
+  //   this.isCurrUserInRoom();
+  // }
 
   // isCurrUserInRoom() {
   //   const interval = 1000; //TODO: change to 200
@@ -235,9 +264,8 @@ export default class BaseContainer extends React.Component {
   //   }
   // }
 
-  handleIsCurrUserInRoom()
-  {
-    this.setState(() => ({ showGame:false, showLobby: true }));
+  handleIsCurrUserInRoom() {
+    this.setState(() => ({ showGame: false, showLobby: true }));
   }
 
   handleCreateRoomError() {
