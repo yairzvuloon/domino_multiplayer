@@ -294,7 +294,7 @@ function getCurrentPlayer(req) {
  
   return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
  }
- else return " ";
+ else return  JSON.stringify("");
 }
 
 module.exports = {

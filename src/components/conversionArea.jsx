@@ -16,7 +16,6 @@ export default class ConversionArea extends React.Component {
   componentDidMount() {
     this._isMounted = true;
     //console.log(this.props.isUserConnected);
-    if ( this._isMounted === true)
     if (this._isMounted === true) this.getChatContent();
   }
 

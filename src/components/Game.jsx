@@ -90,14 +90,18 @@ export default class Game extends React.Component {
     this.lastPieceTime = { minutes: 0, seconds: 0 };
     this.isTimerResetNeeded = false;
     this._isMounted = false;
-    this.isFetchNeeded = true;
 
     ////////////////////////////////////////
     //this.movesHistory = new Array(0);
     //this.redoMoves = new Array(0);
   }
   render() {
-    const drawButton = <button className="btn" onClick={this.handleDrawButton}> Draw</button>;
+    const drawButton = (
+      <button className="btn" onClick={this.handleDrawButton}>
+        {" "}
+        Draw
+      </button>
+    );
     //let newGameButton,
     //nextButton = null;
     let gameSentence = null;
@@ -142,22 +146,24 @@ export default class Game extends React.Component {
     }
     return (
       <div key="homeContainer" id="homeContainer">
-        
         <div key="user-info-area-in-game" className="user-info-area">
           Hello {this.props.name}
           {exitButton}
         </div>
-       
+
         <div id="gameAndDataFlex">
-        <div id="roomData">
-          <p className="roomText" key="game-room-name-title-in-game">
-            game room name:{this.props.currentRoomName}
-          </p>
-          <ChatContainer isUserConnected={!this.state.isGameDone}key="ChatContainer-lobby" />
-        </div>
-        
-        <div id="gameFrame">
-          {/*<div id="statsFrame">      
+          <div id="roomData">
+            <p className="roomText" key="game-room-name-title-in-game">
+              game room name:{this.props.currentRoomName}
+            </p>
+           {<ChatContainer
+              isUserConnected={!this.state.isGameDone}
+              key="ChatContainer-lobby"
+            />}
+          </div>
+
+          <div id="gameFrame">
+            {/*<div id="statsFrame">      
         <Timer
           id="timer"
           sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
@@ -173,26 +179,25 @@ export default class Game extends React.Component {
           average={this.state.average}
         />
       </div>*/}
-          <div id="boardFrame">
-            <Board
-              cells={this.state.boardMap}
-              onClick={(i, j) => this.handleBoardClick(i, j)}
-            />
+            <div id="boardFrame">
+              <Board
+                cells={this.state.boardMap}
+                onClick={(i, j) => this.handleBoardClick(i, j)}
+              />
+            </div>
+            <div id="cartFrame">
+              <Cart
+                id="cartStyle"
+                cart={this.state.cartMap}
+                onClick={(i, value) => this.handleCartClick(i, value)}
+              />
+            </div>
+            {drawButton}
+            {/* {newGameButton} */}
+            {gameSentence}
           </div>
-          <div id="cartFrame">
-            <Cart
-              id="cartStyle"
-              cart={this.state.cartMap}
-              onClick={(i, value) => this.handleCartClick(i, value)}
-            />
-          </div>
-          {drawButton}
-          {/* {newGameButton} */}
-          {gameSentence}
-        </div>
         </div>
       </div>
-
     );
   }
 
@@ -227,17 +232,23 @@ export default class Game extends React.Component {
 
   componentWillUnmount() {
     this._isMounted = false;
-    this.isFetchNeeded = false;
+   
     if (this.timeoutId) {
-      (() => {
-        clearTimeout(this.timeoutId);
-      })();
+      clearTimeout(this.timeoutId);
+    }
+    if (this.timeoutId2) {
+      clearTimeout(this.timeoutId2);   
     }
     if (this.timeoutId3) {
-      (() => {
-        clearTimeout(this.timeoutId3);
-      })();
+      clearTimeout(this.timeoutId3);   
     }
+    if (this.timeoutId4) {
+      clearTimeout(this.timeoutId4);
+    }
+    if (this.timeoutId5) {
+      clearTimeout(this.timeoutId5);   
+    }
+  
   }
 
   componentDidMount() {
@@ -276,7 +287,7 @@ export default class Game extends React.Component {
           if (!response.ok) {
             throw response;
           }
-          this.timeoutId = setTimeout(this.isCurrUserInRoom, interval);
+          this.timeoutId5 = setTimeout(this.isCurrUserInRoom, interval);
           return response.json();
         })
         .then(currRoomId => {
@@ -290,8 +301,8 @@ export default class Game extends React.Component {
 
   handleIsCurrUserInRoom() {
     this.setState(() => ({
-      isGameStarted:false,
-      isGameDone:true
+      isGameStarted: false,
+      isGameDone: true
     }));
     this.props.handleIsCurrUserInRoom();
   }
@@ -324,7 +335,7 @@ export default class Game extends React.Component {
             throw response;
           }
 
-          this.timeoutId = setTimeout(this.fetchGetCurrentPlayerName, interval);
+          this.timeoutId4 = setTimeout(this.fetchGetCurrentPlayerName, interval);
 
           return response.json();
         })

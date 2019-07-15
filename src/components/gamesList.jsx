@@ -23,9 +23,7 @@ export default class GamesList extends React.Component {
   componentWillUnmount() {
     this._isMounted = false;
     if (this.timeoutId) {
-      (() => {
         clearTimeout(this.timeoutId);
-      })();
     }
   }
 

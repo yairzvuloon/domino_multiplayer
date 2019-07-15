@@ -193,11 +193,7 @@ export default class BaseContainer extends React.Component {
     //)
    //   //this.isCurrUserInRoom();
   }
-
-  componentWillUnmount() {
-   
-  }
-
+  
   handleSucceedCreateNewRoom(currentRoomName) {
     this.setState(() => ({
       currentRoomName: currentRoomName,
