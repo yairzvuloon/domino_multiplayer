@@ -35,6 +35,11 @@ gamesListManagement.get("/myRoomId", auth.userAuthentication, (req, res) => {
   res.status(200).json(roomId);
 });
 
+gamesListManagement.get("/myRoomData", auth.userAuthentication, (req, res) => {
+  let roomData = games.getMyRoomData(req);
+  res.status(200).json(roomData);
+});
+
 gamesListManagement.get(
   "/getCart",
   auth.userAuthentication,
@@ -60,7 +65,7 @@ gamesListManagement.get(
   auth.userAuthentication,
   games.isUserInRoom,
   (req, res) => {
-    const isAllPlayersIn = games.isAllPlayersIn(req);
+    const isAllPlayersIn = games.getUsersRoomData(req);
     res.status(200).json(isAllPlayersIn);
   }
 );

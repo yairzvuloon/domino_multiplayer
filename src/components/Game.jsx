@@ -28,7 +28,8 @@ const getInitialState = () => {
     isGameDone: false,
     isMyTurn: false,
     isHost: false,
-
+    numberOfSubscribes: 0,
+    usersNamesInGame: [],
     currentPlayerName: ""
   };
 
@@ -445,11 +446,13 @@ export default class Game extends React.Component {
           return response.json();
         })
         .then(isAllPlayersIn => {
-          const isAllPlayersInRoom = JSON.parse(isAllPlayersIn);
+          const isAllPlayersInRoom = isAllPlayersIn;
 
           this.setState(() => ({
-            isAllPlayersInRoom: isAllPlayersInRoom,
-            isGameStarted: isAllPlayersInRoom
+            isAllPlayersInRoom: isAllPlayersInRoom.isAllPlayersIn,
+            isGameStarted: isAllPlayersInRoom.isAllPlayersIn,
+            numberOfSubscribes: isAllPlayersInRoom.numberOfSubscribes,
+            usersNamesInGame: isAllPlayersInRoom.names
           }));
         });
     }

@@ -59,6 +59,7 @@ export default class GamesList extends React.Component {
               key={"key"+index}
               handleJoinToGame={this.props.handleJoinToGame}
               data={this.state.gamesList[id]}
+              name={this.props.name}
             />
             //<li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}

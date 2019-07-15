@@ -5,39 +5,58 @@ export default class GameObjList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-     roomName: props.data.gameName,
-     roomId: props.data.id,
-     isGameStart: false
+      data: props.data,
+      gameName: props.data.gameName,
+      roomId: props.data.id,
+      isGameStart: false
     };
-    this.handleRoomClick=this.handleRoomClick.bind(this);
+    this.handleRoomClick = this.handleRoomClick.bind(this);
   }
   render() {
-   return (<h4 onClick={this.handleRoomClick}>{this.state.roomName}</h4>);
+    const validRoomStyle = {
+      backgroundColor: "green"
+    };
+
+    const invalidRoomStyle = {
+      backgroundColor: "red"
+    };
+    let style;
+    if (this.props.data.numberOfSubscribes === this.props.data.numPlayerToStart)
+      style = invalidRoomStyle;
+    else style = validRoomStyle;
+
+    return (
+      <p style={style} onClick={this.handleRoomClick}>
+        room name: {this.props.data.gameName} || opened by:{" "}
+        {this.props.data.hostName} || subscribes:{" "}
+        {this.props.data.numberOfSubscribes}/{this.props.data.numPlayerToStart}
+      </p>
+    );
   }
 
-  handleRoomClick(e)
-  {
+  handleRoomClick(e) {
     e.preventDefault();
-    this.addCurrUserToThisRoom();
-    this.props.handleJoinToGame(this.state.roomName);
+
+    if (this.props.data.numberOfSubscribes < this.props.data.numPlayerToStart) {
+      this.addCurrUserToThisRoom();
+      this.props.handleJoinToGame(this.state.gameName);
+    }
   }
 
-  addCurrUserToThisRoom()
-  {
+  addCurrUserToThisRoom() {
     fetch("/games/addUser", {
-        method: "POST",
-        body: this.state.roomId,
-        credentials: "include"
-      })
-        .then(response => {
-          if (!response.ok) {
-            if (response.status === 403) {
-              this.setState(() => ({
-                errMessage: "Unable to add the user, to the room."
-              }));
-            }
+      method: "POST",
+      body: JSON.stringify({roomId:this.state.roomId,name:this.props.name}),
+      credentials: "include"
+    }).then(response => {
+      if (!response.ok) {
+        if (response.status === 403) {
+          this.setState(() => ({
+            errMessage: "Unable to add the user, to the room."
+          }));
+        }
         //     this.props.createNewGameErrorHandler();
-          }
-        });
+      }
+    });
   }
 }

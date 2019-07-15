@@ -113,6 +113,7 @@ export default class BaseContainer extends React.Component {
             <GamesList
               key="GamesList-lobby"
               handleJoinToGame={this.handleSucceedJoinToRoom}
+              name={this.state.currentUser.name}
             />
           </div>
 

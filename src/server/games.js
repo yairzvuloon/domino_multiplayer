@@ -35,7 +35,7 @@ function addGameToGamesList(req, res, next) {
     obj.DominoStackLogic = new Manager.DominoStack();
     obj.validLocationsArray = createEmptyValidLocations();
     obj.boardMap = Manager.setInitialBoard(57);
-    obj.numPlayerToStart=JSON.parse(obj.numPlayerToStart);
+    obj.numPlayerToStart = JSON.parse(obj.numPlayerToStart);
     obj.currentPlayerIndex = 0;
     obj.numberOfSubscribes = 0;
     gamesList[req.session.id] = obj;
@@ -116,26 +116,18 @@ function removeUserFromGame(req, res, next) {
 }
 
 function getMyRoomId(req) {
-  // if (gamesList[req.session.id] !== undefined) {
-  //   return JSON.stringify({ id: req.session.id, subscribesIdStringsIndex: 0 });
-  // } else if (gamesList[req.session.id] === undefined) {
-  //   for (sessionId in gamesList) {
-  //     const gameData = gamesList[sessionId];
-
-  //     for (var i = 0; i < gameData.numberOfSubscribes; i++) {
-  //       if (gameData.subscribesIdStrings[i] === req.session.id) {
-  //         return JSON.stringify({
-  //           id: gameData.id,
-  //           subscribesIdStringsIndex: i
-  //         });
-  //       }
-  //     }
-  //   }
-  // }
   if (userRoomId[req.session.id] !== undefined) {
     return JSON.stringify(userRoomId[req.session.id]);
   }
   return JSON.stringify({ id: "", subscribesIdStringsIndex: "" });
+}
+
+function getMyRoomData(req) {
+  const roomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = roomIdObj.id;
+  // const index = roomIdObj.subscribesIdStringsIndex;
+  const gameData = gamesList[roomId];
+  return JSON.stringify(gameData);
 }
 
 function isHost(req) {
@@ -150,18 +142,23 @@ function isUserInRoom(req, res, next) {
 }
 
 function addUserToGame(req, res, next) {
-  const roomID = req.body;
+  const roomID = JSON.parse(req.body).roomId;
+  const name = JSON.parse(req.body).name;
+
   const gameData = gamesList[roomID];
+
   if (gameData.numberOfSubscribes >= gameData.numPlayerToStart) {
     res.sendStatus(401);
   } else {
-    gamesList[roomID].subscribesIdStrings[gameData.numberOfSubscribes] =
-      req.session.id;
+    gamesList[roomID].subscribesIdStrings[gameData.numberOfSubscribes] = {
+      id: req.session.id,
+      name: name
+    };
     userRoomId[req.session.id] = {
       id: roomID,
       subscribesIdStringsIndex: gamesList[roomID].numberOfSubscribes
     };
-    gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
+    //gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
     gameData.numberOfSubscribes++;
     gamesList[roomID] = gameData;
     next();
@@ -246,13 +243,17 @@ function getCard(req) {
   return JSON.stringify({ card: gameData.DominoStackLogic.getCard() });
 }
 
-function isAllPlayersIn(req) {
+function getUsersRoomData(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   if (gameData !== undefined) {
-    return JSON.stringify(
-      gameData.numberOfSubscribes === gameData.numPlayerToStart
-    );
+    return {
+      isAllPlayersIn:
+        gameData.numberOfSubscribes === gameData.numPlayerToStart
+      ,
+      names: gameData.subscribesIdStrings,
+      numberOfSubscribes: gameData.numberOfSubscribes
+    };
   } else {
     return "false";
   }
@@ -277,7 +278,7 @@ function isMyTurn(req) {
   if (gameData !== undefined) {
     const indexPlayer = gameData.currentPlayerIndex;
 
-    return req.session.id === gameData.subscribesIdStrings[indexPlayer];
+    return req.session.id === gameData.subscribesIdStrings[indexPlayer].id;
   } else return false;
 }
 
@@ -286,7 +287,7 @@ function getCurrentPlayer(req) {
   const gameData = gamesList[roomId];
   if (gameData !== undefined) {
     const indexPlayer = gameData.currentPlayerIndex;
-    const currentPlayerId = gameData.subscribesIdStrings[indexPlayer];
+    const currentPlayerId = gameData.subscribesIdStrings[indexPlayer].id;
 
     return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
   } else return JSON.stringify("");
@@ -305,9 +306,10 @@ module.exports = {
   getValidLocations,
   updateValidLocationsAndBoard,
   getCard,
-  isAllPlayersIn,
+  getUsersRoomData,
   isMyTurn,
   moveToNextTurn,
   getCurrentPlayer,
-  isHost
+  isHost,
+  myRoomData: getMyRoomData
 };

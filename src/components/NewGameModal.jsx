@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { hostname } from "os";
 
 class GameData {
-  constructor(i_HostId, i_GameName, i_NumPlayerToStart) {
+  constructor(i_HostName, i_HostId, i_GameName, i_NumPlayerToStart) {
     this.id = i_HostId;
     this.gameName = i_GameName;
     this.numPlayerToStart = i_NumPlayerToStart;
@@ -11,6 +11,7 @@ class GameData {
     this.isGameStart = false;
     this.subscribesIdStrings = new Array(i_NumPlayerToStart);
     this.subscribesIdStrings[0] = i_HostId;
+    this.hostName = i_HostName;
   }
 }
 
@@ -20,7 +21,7 @@ export default class NewGameModal extends React.Component {
 
     this.state = {
       errMessage: "",
-      hostName: props.currentUser
+      hostName: props.currentUser.name
     };
 
     this.handleGameRoomCreator = this.handleGameRoomCreator.bind(this);
@@ -60,6 +61,7 @@ export default class NewGameModal extends React.Component {
     const gameName = e.target.elements.gameName.value;
     const numOfPlayers = e.target.elements.numOfPlayers.value;
     let gameObj = new GameData(
+      this.props.currentUser.name,
       this.props.currentUser.id,
       gameName,
       numOfPlayers
@@ -79,7 +81,7 @@ export default class NewGameModal extends React.Component {
           this.props.createNewGameErrorHandler();
         }
       })
-      .then(()=>this.props.createNewGameSuccessHandler(gameName));
+      .then(() => this.props.createNewGameSuccessHandler(gameName));
     return false;
   }
 
