@@ -4,7 +4,7 @@ const Stats = props => {
   const {
     turn,
     currentScore,
-    average,
+   average,
     withdrawals,
   } = props;
 

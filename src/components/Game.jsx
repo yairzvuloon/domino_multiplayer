@@ -71,7 +71,7 @@ export default class Game extends React.Component {
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
-    //this.getTurnDuration = this.getTurnDuration.bind(this);
+    this.getTurnDuration = this.getTurnDuration.bind(this);
     //this.removeAllValidNeighbors = this.removeAllValidNeighbors.bind(this);
     //this.cleanAllFlags = this.cleanAllFlags.bind(this);
     //this.getNextAverageTurn = this.getNextAverageTurn.bind(this);
@@ -123,8 +123,6 @@ export default class Game extends React.Component {
         gameSentence = <p>it's {this.state.currentPlayerName} turn </p>;
       }
     } else {
-      //newGameButton = <button onClick={this.restartGame}>newGame</button>;
-      //nextButton = <button onClick={this.handleNextButton}> Next</button>;
       exitButton = (
         <button
           key="exit"
@@ -156,29 +154,31 @@ export default class Game extends React.Component {
             <p className="roomText" key="game-room-name-title-in-game">
               game room name:{this.props.currentRoomName}
             </p>
-           {<ChatContainer
-              isUserConnected={!this.state.isGameDone}
-              key="ChatContainer-lobby"
-            />}
+            {
+              <ChatContainer
+                isUserConnected={!this.state.isGameDone}
+                key="ChatContainer-lobby"
+              />
+            }
           </div>
 
           <div id="gameFrame">
-            {/*<div id="statsFrame">      
-        <Timer
+            <div id="statsFrame">
+              <Timer
           id="timer"
           sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
           isResetNeeded={this.isTimerResetNeeded}
           isGameStarted={this.state.isGameStarted}
-          timeToDisplay={this.state.timeToDisplay}
-        />
-        <Stats
-          id="statistics"
-          currentScore={this.state.currentScore}
-          turn={this.state.turn}
-          withdrawals={this.state.withdrawals}
-          average={this.state.average}
-        />
-      </div>*/}
+          //timeToDisplay={this.state.timeToDisplay}
+            />
+              <Stats
+                id="statistics"
+                currentScore={this.state.currentScore}
+                turn={this.state.turn}
+                withdrawals={this.state.withdrawals}
+                average={this.state.average}
+              />
+            </div>
             <div id="boardFrame">
               <Board
                 cells={this.state.boardMap}
@@ -200,6 +200,19 @@ export default class Game extends React.Component {
       </div>
     );
   }
+ 
+  getTurnDuration() {
+    const turnLength = {
+      minutes: this.currentTime.minutes - this.lastPieceTime.minutes,
+      seconds: this.currentTime.seconds - this.lastPieceTime.seconds
+    };
+
+    return turnLength;
+  }
+ 
+  saveCurrentTime(m, s) {
+    this.currentTime = { minutes: m, seconds: s };
+  }
 
   handleExitButton() {
     this.setState(() => ({ isGameStarted: false, isGameDone: true }));
@@ -220,35 +233,36 @@ export default class Game extends React.Component {
       .then(domino => {
         this.setState(prevState => {
           const cartMap = [...prevState.cartMap];
+          let prevWithdrawals = prevState.withdrawals;
           if (domino) {
             cartMap.push(JSON.parse(domino).card);
+            prevWithdrawals++;
             //     numOfTurnsToAdd++;
             //   }
           }
-          return { cartMap: cartMap };
+          return { withdrawals: prevWithdrawals, cartMap: cartMap };
         });
       });
   }
 
   componentWillUnmount() {
     this._isMounted = false;
-   
+
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
     }
     if (this.timeoutId2) {
-      clearTimeout(this.timeoutId2);   
+      clearTimeout(this.timeoutId2);
     }
     if (this.timeoutId3) {
-      clearTimeout(this.timeoutId3);   
+      clearTimeout(this.timeoutId3);
     }
     if (this.timeoutId4) {
       clearTimeout(this.timeoutId4);
     }
     if (this.timeoutId5) {
-      clearTimeout(this.timeoutId5);   
+      clearTimeout(this.timeoutId5);
     }
-  
   }
 
   componentDidMount() {
@@ -335,7 +349,10 @@ export default class Game extends React.Component {
             throw response;
           }
 
-          this.timeoutId4 = setTimeout(this.fetchGetCurrentPlayerName, interval);
+          this.timeoutId4 = setTimeout(
+            this.fetchGetCurrentPlayerName,
+            interval
+          );
 
           return response.json();
         })
@@ -584,7 +601,7 @@ export default class Game extends React.Component {
       const { side1, side2 } = this.state.selectedCard["value"];
       //need to fix it for stats//
       ///////////////////////////
-      //let averageTurnInSecsToAdd = this.getAverageDiffInSecs();
+     // let averageTurnInSecsToAdd = this.getAverageDiffInSecs();
 
       let neighborsObj = this.getNeighborsObj(row, col);
       let card = new Manager.Card(false, side1, side2, true);
@@ -602,6 +619,12 @@ export default class Game extends React.Component {
       this.locatePieceOnBoard(row, col, card);
     }
   }
+
+  /*getAverageDiffInSecs() {
+    const currAverage = this.getNextAverageTurn();
+    const prevAverage = this.convertTimeToSecs(this.state.average);
+    return currAverage - prevAverage;
+  }*/
 
   getNeighborsObj(row, col) {
     let neighborsObj = new Manager.NeighborsObj(
@@ -675,7 +698,7 @@ export default class Game extends React.Component {
 
     let scoreAddition = card.side1 + card.side2;
     this.isTimerResetNeeded = false;
-    // const average = this.calculateAverageOfTurn();
+    const average = this.calculateAverageOfTurn();
     this.setState(prevState => {
       const newBoardMap = this.getUpdatedBoard(
         [...prevState.boardMap],
@@ -686,18 +709,29 @@ export default class Game extends React.Component {
       ////////////////////////////
       //complete that!!!!!///////
       //////////////////////////
-      // const newScore = this.getUpdatedScore(
-      //   prevState.currentScore,
-      //   scoreAddition
-      // );
+      const newScore = this.getUpdatedScore(
+        prevState.currentScore,
+        scoreAddition
+      );
       const newTurn = prevState.turn + 1;
       return {
         boardMap: newBoardMap,
-        //currentScore: newScore,
-        turn: newTurn
-        //average: average
+        currentScore: newScore,
+        turn: newTurn ,
+        average: average
       };
     });
+  }
+  calculateAverageOfTurn() {
+    this.lastPieceTime = this.currentTime;
+    let seconds = this.lastPieceTime.minutes * 60 + this.lastPieceTime.seconds;
+    let averageInSecondsFormat = seconds / (this.state.turn + 1);
+    return Manager.secondsToTime(averageInSecondsFormat);
+  }
+
+  getUpdatedScore(score, addition) {
+    score += addition;
+    return score;
   }
 
   removePieceFromCart() {
