@@ -41,7 +41,31 @@ export default class NewGameModal extends React.Component {
           <label className="newGame-input-label" htmlFor="userName">
             num of players:{" "}
           </label>
-          <input className="newGame-input" name="numOfPlayers" />
+          {/*<input className="newGame-input" name="numOfPlayers" />*/}
+          <p>Amount of members:</p>
+          <label>
+            {" "}
+            <input
+              type="radio"
+              className="newGame-input"
+              name="numOfPlayers"
+              value="2"
+              id="r1"
+            />
+            2
+          </label>
+          <label>
+            {" "}
+            <input
+              type="radio"
+              className="newGame-input"
+              name="numOfPlayers"
+              value="3"
+              id="r2"
+            />
+            3
+          </label>
+
           <input className="submit-btn btn" type="submit" value="confirm" />
         </form>
         {this.renderErrorMessage()}

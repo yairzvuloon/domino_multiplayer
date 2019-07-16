@@ -103,6 +103,7 @@ export default class Game extends React.Component {
       </button>
     );
     //let newGameButton,
+   let gameStartSentence=null;
     let gameSentence = null;
     let removeButton = null;
     let exitButton = null;
@@ -135,8 +136,19 @@ export default class Game extends React.Component {
     }
 
     if (this.state.isGameStarted) {
+     if(this.state.turn===0)
+     {
+      gameStartSentence=<p>the game started!!! </p>;
+     }
+     else{
+      gameStartSentence=null;
+     }
+     
       if (!this.state.isMyTurn) {
         gameSentence = <p>it's {this.state.currentPlayerName} turn </p>;
+      }
+      else{
+        gameSentence = <p>it's your turn! </p>;
       }
     } else {
       // removeButton = (
@@ -145,8 +157,8 @@ export default class Game extends React.Component {
       //   </button>
       // );
       if (!this.state.isAllPlayersInRoom) {
-        gameSentence = <p>we waiting for more players </p>;
       } else {
+        gameSentence = <p>we waiting for more players </p>;
         if (this.isWin) {
           gameSentence = <p>YOU WINNER!!!</p>;
         } else {
@@ -167,7 +179,7 @@ export default class Game extends React.Component {
             <p className="roomText" key="game-room-name-title-in-game">
               game room name:{this.props.currentRoomName}
             </p>
-            <p className="roomText" key="game-room-name-title-in-game">
+            <p className="roomText" key="game-room-gameUsersList">
               users in room:
             </p>
 
@@ -188,6 +200,7 @@ export default class Game extends React.Component {
 
           <div id="gameFrame">
             <div id="statsFrame">
+            {gameStartSentence}
               <Timer
                 id="timer"
                 sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
