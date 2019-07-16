@@ -103,7 +103,7 @@ export default class Game extends React.Component {
       </button>
     );
     //let newGameButton,
-   let gameStartSentence=null;
+    let gameStartSentence = null;
     let gameSentence = null;
     let removeButton = null;
     let exitButton = null;
@@ -121,7 +121,7 @@ export default class Game extends React.Component {
     }
 
     if (
-      (this.state.isHost && this.state.numberOfSubscribes===1) ||
+      (this.state.isHost && this.state.numberOfSubscribes === 1) ||
       this.state.isGameDone
     ) {
       removeButton = (
@@ -136,18 +136,15 @@ export default class Game extends React.Component {
     }
 
     if (this.state.isGameStarted) {
-     if(this.state.turn===0)
-     {
-      gameStartSentence=<p>the game started!!! </p>;
-     }
-     else{
-      gameStartSentence=null;
-     }
-     
+      if (this.state.turn === 0) {
+        gameStartSentence = <p>the game started!!! </p>;
+      } else {
+        gameStartSentence = null;
+      }
+
       if (!this.state.isMyTurn) {
         gameSentence = <p>it's {this.state.currentPlayerName} turn </p>;
-      }
-      else{
+      } else {
         gameSentence = <p>it's your turn! </p>;
       }
     } else {
@@ -160,9 +157,9 @@ export default class Game extends React.Component {
       } else {
         gameSentence = <p>we waiting for more players </p>;
         if (this.isWin) {
-          gameSentence = <p>YOU WINNER!!!</p>;
+          gameSentence = <p>YOU WIN!!!</p>;
         } else {
-          gameSentence = <p>YOU LOSER...</p>;
+          gameSentence = <p>YOU LOST:(</p>;
         }
       }
     }
@@ -184,23 +181,22 @@ export default class Game extends React.Component {
             </p>
 
             <ul key="gameUsersList">
-          {Object.keys(this.state.usersNamesInGame).map((id, index) => (
-            <li key={this.state.usersNamesInGame[id].name + index}>
-              {this.state.usersNamesInGame[id].name}
-            </li>
-          ))}
-        </ul>
-            
-              <ChatContainer
-                isUserConnected={!this.state.isGameDone}
-                key="ChatContainer-lobby"
-              />
-            
+              {Object.keys(this.state.usersNamesInGame).map((id, index) => (
+                <li key={this.state.usersNamesInGame[id].name + index}>
+                  {this.state.usersNamesInGame[id].name}
+                </li>
+              ))}
+            </ul>
+
+            <ChatContainer
+              isUserConnected={!this.state.isGameDone}
+              key="ChatContainer-lobby"
+            />
           </div>
 
           <div id="gameFrame">
             <div id="statsFrame">
-            {gameStartSentence}
+              {gameStartSentence}
               <Timer
                 id="timer"
                 sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
@@ -238,6 +234,25 @@ export default class Game extends React.Component {
     );
   }
 
+  // isExistPieceForValidSquares(cartMap) {
+  //   let isExist = false;
+  //   let cards = new Array(7);
+  //   for (let i = 0; i < cartMap.length; i++) {
+  //     if (cartMap[i]) {
+  //       cards[cartMap[i].side1] = true;
+  //       cards[cartMap[i].side2] = true;
+  //     }
+  //   }
+  //   for (let j = 0; j < 7; j++) {
+  //     let num = this.validLocationsArray[j].length;
+  //     if (cards[j] && num > 0) {
+  //       isExist = true;
+  //       break;
+  //     }
+  //   }
+  //   return isExist;
+  // }
+
   getTurnDuration() {
     const turnLength = {
       minutes: this.currentTime.minutes - this.lastPieceTime.minutes,
@@ -262,7 +277,7 @@ export default class Game extends React.Component {
   }
 
   handleDrawButton() {
-    if (this.state.isGameStarted) {
+    if (this.state.isMyTurn && this.state.isGameStarted) {
       return fetch("/games/getCard", {
         method: "GET",
         credentials: "include"
@@ -277,13 +292,22 @@ export default class Game extends React.Component {
           this.setState(prevState => {
             const cartMap = [...prevState.cartMap];
             let prevWithdrawals = prevState.withdrawals;
-            if (domino) {
+            let isGameDone = false;
+            if (JSON.parse(domino).card !== null) {
               cartMap.push(JSON.parse(domino).card);
               prevWithdrawals++;
               //     numOfTurnsToAdd++;
               //   }
             }
-            return { withdrawals: prevWithdrawals, cartMap: cartMap };
+            // else{
+            // isGameDone=true;
+            // }
+
+            return {
+              withdrawals: prevWithdrawals,
+              cartMap: cartMap,
+              isGameDone: isGameDone
+            };
           });
         });
     }
@@ -471,7 +495,7 @@ export default class Game extends React.Component {
             isAllPlayersInRoom: isAllPlayersInRoom.isAllPlayersIn,
             isGameStarted: isAllPlayersInRoom.isAllPlayersIn,
             numberOfSubscribes: isAllPlayersInRoom.numberOfSubscribes,
-            usersNamesInGame:[...isAllPlayersInRoom.names] 
+            usersNamesInGame: [...isAllPlayersInRoom.names]
           }));
         });
     }
