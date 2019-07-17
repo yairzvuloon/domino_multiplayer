@@ -38,6 +38,10 @@ function addGameToGamesList(req, res, next) {
     obj.numPlayerToStart = JSON.parse(obj.numPlayerToStart);
     obj.currentPlayerIndex = 0;
     obj.numberOfSubscribes = 0;
+    obj.lostQueue=[];
+    obj.winQueue=[];
+    obj.finalWinner=null;
+    obj.finalLost=null;
     gamesList[req.session.id] = obj;
     next();
   }
@@ -152,7 +156,8 @@ function addUserToGame(req, res, next) {
   } else {
     gamesList[roomID].subscribesIdStrings[gameData.numberOfSubscribes] = {
       id: req.session.id,
-      name: name
+      name: name,
+      stats: null
     };
     userRoomId[req.session.id] = {
       id: roomID,
@@ -293,6 +298,40 @@ function getCurrentPlayer(req) {
   } else return JSON.stringify("");
 }
 
+/*const objToPost = {
+  turn: this.state.turn,
+  currentScore: this.state.currentScore,
+  average: this.state.average,
+  withdrawals: this.state.withdrawals,
+  isUserWin: this.isWin,
+  isUserLost:this.isLost,
+  isExistMoves: this.isExistPieceForValidSquares([this.state.cartMap]),
+  isCartEmpty:this.isCartEmpty() 
+};*/
+
+
+function postStats(req, res, next) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+
+  const myIndex = getMyRoomIdObj.subscribesIdStringsIndex;
+
+  const gameData = gamesList[roomId];
+
+  const objToPost = JSON.parse(req.body);
+
+  gameData.subscribesIdStrings[myIndex].stats = objToPost;
+
+  if(obj.objToPost.isUserLost&& gameData.winQueue.length<=gameData.numberOfSubscribes-1)
+  {
+    gameData.winQueue.push(myIndex);
+  }
+  else if(!obj.objToPost.isUserWin&& gameData.lostQueue.length<=gameData.numberOfSubscribes){
+    gameData.lostQueue.push(myIndex);
+  }
+}
+
+
 module.exports = {
   gameAuthentication,
   addGameToGamesList,
@@ -311,5 +350,6 @@ module.exports = {
   moveToNextTurn,
   getCurrentPlayer,
   isHost,
-  myRoomData: getMyRoomData
+  myRoomData: getMyRoomData,
+  postStats
 };

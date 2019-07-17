@@ -20,9 +20,14 @@ gamesListManagement.post("/updateValidLocations", games.updateValidLocationsAndB
   res.sendStatus(200);
 });
 
-// gamesListManagement.post("/moveToNextTurn", games.moveToNextTurn, (req, res) => {
-//   res.sendStatus(200);
-// });
+
+gamesListManagement.post("/postStats", games.postStats, (req, res) => {
+  res.sendStatus(200);
+});
+
+ gamesListManagement.post("/moveToNextTurn", games.moveToNextTurn, (req, res) => {
+   res.sendStatus(200);
+ });
 
 
 gamesListManagement.get("/allGames", auth.userAuthentication, (req, res) => {

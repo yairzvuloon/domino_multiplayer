@@ -25,6 +25,7 @@ const getInitialState = () => {
     timeToDisplay: null,
     isAllPlayersInRoom: false,
     isGameStarted: false,
+    isUserDone: false,
     isGameDone: false,
     isMyTurn: false,
     isHost: false,
@@ -70,10 +71,15 @@ export default class Game extends React.Component {
     this.handleIsCurrUserInRoom = this.handleIsCurrUserInRoom.bind(this);
     this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
     this.fetchCart = this.fetchCart.bind(this);
+    this.isTheFirstTurn = this.isTheFirstTurn.bind(this);
 
     //this.restartGame = this.restartGame.bind(this);
 
     //this.convertTimeToSecs = this.convertTimeToSecs.bind(this);
+    this.isExistPieceForValidSquares = this.isExistPieceForValidSquares.bind(
+      this
+    );
+
     this.getTurnDuration = this.getTurnDuration.bind(this);
     //this.removeAllValidNeighbors = this.removeAllValidNeighbors.bind(this);
     //this.cleanAllFlags = this.cleanAllFlags.bind(this);
@@ -234,24 +240,28 @@ export default class Game extends React.Component {
     );
   }
 
-  // isExistPieceForValidSquares(cartMap) {
-  //   let isExist = false;
-  //   let cards = new Array(7);
-  //   for (let i = 0; i < cartMap.length; i++) {
-  //     if (cartMap[i]) {
-  //       cards[cartMap[i].side1] = true;
-  //       cards[cartMap[i].side2] = true;
-  //     }
-  //   }
-  //   for (let j = 0; j < 7; j++) {
-  //     let num = this.validLocationsArray[j].length;
-  //     if (cards[j] && num > 0) {
-  //       isExist = true;
-  //       break;
-  //     }
-  //   }
-  //   return isExist;
-  // }
+  isExistPieceForValidSquares(cartMap) {
+    let isExist = false;
+    let cards = new Array(7);
+    for (let i = 0; i < cartMap.length; i++) {
+      if (cartMap[i]) {
+        cards[cartMap[i].side1] = true;
+        cards[cartMap[i].side2] = true;
+      }
+    }
+    for (let j = 0; j < 7; j++) {
+      let num = this.validLocationsArray[j].length;
+      if (cards[j] && num > 0) {
+        isExist = true;
+        break;
+      }
+    }
+    return !this.isTheFirstTurn() && isExist;
+  }
+
+  isTheFirstTurn() {
+    return this.state.boardMap[28][28].valid;
+  }
 
   getTurnDuration() {
     const turnLength = {
@@ -292,23 +302,32 @@ export default class Game extends React.Component {
           this.setState(prevState => {
             const cartMap = [...prevState.cartMap];
             let prevWithdrawals = prevState.withdrawals;
-            let isGameDone = false;
+            //let isGameDone = false;
+            let isUserDone = false;
             if (JSON.parse(domino).card !== null) {
               cartMap.push(JSON.parse(domino).card);
               prevWithdrawals++;
               //     numOfTurnsToAdd++;
               //   }
             }
-            // else{
-            // isGameDone=true;
-            // }
 
             return {
               withdrawals: prevWithdrawals,
               cartMap: cartMap,
-              isGameDone: isGameDone
+              isUserDone: isUserDone
+              //isGameDone: isGameDone
             };
           });
+        }).than(()=>{
+          fetch("/games/moveToNextTurn", {
+            method: "POST",
+            credentials: "include"
+          })
+            .then(response => {
+              if (!response.ok) {
+                throw response;
+              }
+            })
         });
     }
   }
@@ -597,22 +616,6 @@ export default class Game extends React.Component {
     }
     cartMap[indexCart].valid = true;
     let numOfTurnsToAdd = 0;
-    /////////////////////////////////////////////////////////////////////////////
-    //automatic draw cards, I must to decide if to create button for get card.//
-    ///////////////////////////////////////////////////////////////////////////
-
-    // while (
-    //   !this.isTheFirstTurn() &&
-    //   !this.isExistPieceForValidSquares(cartMap) &&
-    //   DominoStackLogic.getNumOfPieces() > 0
-    // ) {
-    //   let domino = DominoStackLogic.getCard();
-
-    //   if (domino) {
-    //     cartMap.push(domino);
-    //     numOfTurnsToAdd++;
-    //   }
-    // }
     return {
       cartMap: cartMap,
       turn: this.state.turn + numOfTurnsToAdd
@@ -931,5 +934,16 @@ export default class Game extends React.Component {
       boardMap[row][col].valid !== true &&
       boardMap[row][col].isLaying === undefined
     );
+  }
+
+  fetchPostStats() {
+    const objToPost = {
+      turn: this.state.turn,
+      currentScore: this.state.currentScore,
+      average: this.state.average,
+      withdrawals: this.state.withdrawals,
+      isExistMoves: this.isExistPieceForValidSquares([this.state.cartMap]),
+      isCartEmpty: this.isCartEmpty()
+    };
   }
 }

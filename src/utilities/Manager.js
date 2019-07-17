@@ -1,6 +1,6 @@
 class DominoStack {
   constructor() {
-    this.piecesAmount = 14;
+    this.piecesAmount = 21;
     this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
     this.indexesCardsBoxIndex = this.piecesAmount - 1;
     this.cardsArray = this.createCardsArray();
