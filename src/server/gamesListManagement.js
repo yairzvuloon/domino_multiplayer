@@ -16,19 +16,25 @@ gamesListManagement.post("/addUser", games.addUserToGame, (req, res) => {
   res.sendStatus(200);
 });
 
-gamesListManagement.post("/updateValidLocations", games.updateValidLocationsAndBoard, (req, res) => {
-  res.sendStatus(200);
-});
-
+gamesListManagement.post(
+  "/updateValidLocations",
+  games.updateValidLocationsAndBoard,
+  (req, res) => {
+    res.sendStatus(200);
+  }
+);
 
 gamesListManagement.post("/postStats", games.postStats, (req, res) => {
   res.sendStatus(200);
 });
 
- gamesListManagement.post("/moveToNextTurn", games.moveToNextTurn, (req, res) => {
-   res.sendStatus(200);
- });
-
+gamesListManagement.post(
+  "/moveToNextTurn",
+  games.moveToNextTurn,
+  (req, res) => {
+    res.sendStatus(200);
+  }
+);
 
 gamesListManagement.get("/allGames", auth.userAuthentication, (req, res) => {
   let list = games.getGamesList();
@@ -112,6 +118,16 @@ gamesListManagement.get(
   (req, res) => {
     let isHost = games.isHost(req);
     res.status(200).json(isHost);
+  }
+);
+
+gamesListManagement.get(
+  "/isGameDone",
+  auth.userAuthentication,
+  games.isGameDone,
+  (req, res) => {
+    let isGameDone = games.isGameDone(req);
+    res.status(200).json(isGameDone);
   }
 );
 

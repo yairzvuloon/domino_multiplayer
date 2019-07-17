@@ -298,6 +298,17 @@ function getCurrentPlayer(req) {
   } else return JSON.stringify("");
 }
 
+function isGameDone(req) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+  const gameData = gamesList[roomId];
+  let playerCounter = 0;
+  for (let i = 0; i < gameData.numberOfSubscribes; i++)
+    if (gameData.subscribesIdStrings[i].stats === null) playerCounter++;
+
+  return playerCounter <= 1;
+}
+
 /*const objToPost = {
   turn: this.state.turn,
   currentScore: this.state.currentScore,
@@ -322,11 +333,11 @@ function postStats(req, res, next) {
 
   gameData.subscribesIdStrings[myIndex].stats = objToPost;
 
-  if(obj.objToPost.isUserLost&& gameData.winQueue.length<=gameData.numberOfSubscribes-1)
+  if(objToPost.isUserLost&& gameData.winQueue.length<=gameData.numberOfSubscribes-1)
   {
     gameData.winQueue.push(myIndex);
   }
-  else if(!obj.objToPost.isUserWin&& gameData.lostQueue.length<=gameData.numberOfSubscribes){
+  else if(!objToPost.isUserWin&& gameData.lostQueue.length<=gameData.numberOfSubscribes){
     gameData.lostQueue.push(myIndex);
   }
 }
@@ -351,5 +362,6 @@ module.exports = {
   getCurrentPlayer,
   isHost,
   myRoomData: getMyRoomData,
+  isGameDone,
   postStats
 };
