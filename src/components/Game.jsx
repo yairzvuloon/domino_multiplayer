@@ -31,7 +31,9 @@ const getInitialState = () => {
     isHost: false,
     numberOfSubscribes: 0,
     usersNamesInGame: [],
-    currentPlayerName: ""
+    currentPlayerName: "",
+    isWin: false,
+    isLost: false
   };
 
   return initialState;
@@ -95,7 +97,6 @@ export default class Game extends React.Component {
     // this.isJoker = this.isJoker.bind(this);
 
     //this.isGameStarted = false;
-    this.isWin = false;
     this.cartEmptyFlag = false;
     //this.validLocationsArray = this.createEmptyValidLocations();
     this.currentTime = { minutes: 0, seconds: 0 };
@@ -144,7 +145,7 @@ export default class Game extends React.Component {
       );
     }
 
-    if (this.state.isGameStarted) {
+    if (!this.state.isGameDone && this.state.isGameStarted) {
       if (this.state.turn === 0) {
         gameStartSentence = <p>the game started!!! </p>;
       } else {
@@ -163,12 +164,11 @@ export default class Game extends React.Component {
       //   </button>
       // );
       if (!this.state.isAllPlayersInRoom) {
-      } else {
         gameSentence = <p>we waiting for more players </p>;
-
-        if (this.isWin) {
+      } else {
+        if (this.state.isWin) {
           gameSentence = <p>YOU WIN!!!</p>;
-        } else if (this.isLost) {
+        } else if (this.state.isGameDone && this.state.isLost) {
           gameSentence = <p>YOU LOST:(</p>;
         }
       }
@@ -212,6 +212,7 @@ export default class Game extends React.Component {
                 sendCurrentTime={(m, s) => this.saveCurrentTime(m, s)}
                 isResetNeeded={this.isTimerResetNeeded}
                 isGameStarted={this.state.isGameStarted}
+                isGameDone={this.state.isGameDone}
                 //timeToDisplay={this.state.timeToDisplay}
               />
               <Stats
@@ -245,9 +246,10 @@ export default class Game extends React.Component {
   }
 
   isExistPieceForValidSquares(cartMap) {
+    let isExist = false;
+    let cards = new Array(7);
+
     if (this.state.isGameStarted) {
-      let isExist = false;
-      let cards = new Array(7);
       for (let i = 0; i < cartMap.length; i++) {
         if (cartMap[i]) {
           cards[cartMap[i].side1] = true;
@@ -261,9 +263,9 @@ export default class Game extends React.Component {
           break;
         }
       }
-
-      return !this.isTheFirstTurn() && isExist;
     }
+    const isTheFirstTurn = !this.isTheFirstTurn();
+    return isTheFirstTurn && isExist;
   }
 
   isTheFirstTurn() {
@@ -399,10 +401,14 @@ export default class Game extends React.Component {
         this.setState({ cartMap: JSON.parse(cart).cart });
       });
   }
+
   fetchIsGameDone() {
     const interval = 1000; //TODO: change to 200
     if (!this.state.isGameDone && this.state.isGameStarted) {
-      return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
+      return fetch("/games/isGameDone", {
+        method: "GET",
+        credentials: "include"
+      })
         .then(response => {
           if (!response.ok) {
             throw response;
@@ -410,18 +416,13 @@ export default class Game extends React.Component {
           this.timeoutId = setTimeout(this.fetchIsGameDone, interval);
           return response.json();
         })
-        .then(
-          IsGameDone => {
-            this.setState(() => {
-              isGameDone: IsGameDone;
-            });
-          },
-          () => {
-            this.fetchPostStats();
-          }
-        )
-        .catch(err => {
-          throw err;
+        .then(isGameDoneOut => {
+          this.setState(() => ({
+            isGameDone: isGameDoneOut
+          }));
+        })
+        .then(() => {
+          if (this.state.isGameDone) (() => this.fetchAmIWinOrLost())();
         });
     } else {
       this.timeoutId = setTimeout(this.fetchIsGameDone, interval);
@@ -847,6 +848,7 @@ export default class Game extends React.Component {
       };
     });
   }
+
   calculateAverageOfTurn() {
     this.lastPieceTime = this.currentTime;
     let seconds = this.lastPieceTime.minutes * 60 + this.lastPieceTime.seconds;
@@ -861,26 +863,33 @@ export default class Game extends React.Component {
 
   removePieceFromCart() {
     const { index } = this.state.selectedCard;
-    this.setState(prevState => {
-      const newCartMap = this.getCartMapAfterRemoveCard(
-        index,
-        prevState.cartMap
-      );
-      let isGameStartedCopy = true;
-      let isEmptyCart = this.isCartEmpty();
-      let isUserDone = null;
-      if (isEmptyCart) {
-        isGameStartedCopy = false;
-        isUserDone = isEmptyCart;
-        //this.isWin = true;
+    this.setState(
+      prevState => {
+        const newCartMap = this.getCartMapAfterRemoveCard(
+          index,
+          prevState.cartMap
+        );
+        // let isGameStartedCopy = true;
+        let isEmptyCart = this.isCartEmpty();
+        let isUserDone = isEmptyCart;
+        if (isEmptyCart) {
+          //isGameStartedCopy = false;
+          isUserDone = isEmptyCart;
+          //this.isWin = true;
+        }
+        return {
+          cartMap: newCartMap,
+          //isGameStarted: isGameStartedCopy,
+          isUserDone: isUserDone,
+          isWin: true
+        };
+      },
+      () => {
+        if (this.state.isUserDone) {
+          this.fetchPostStats();
+        }
       }
-      return {
-        cartMap: newCartMap,
-        isGameStarted: isGameStartedCopy,
-        isUserDone: isUserDone
-      };
-    });
-    this.fetchPostStats();
+    );
   }
 
   getCartMapAfterRemoveCard(index, cartMap) {
@@ -989,17 +998,19 @@ export default class Game extends React.Component {
 
   fetchPostStats() {
     if (this.state.isUserDone) {
-   const isExistPiece=this.isExistPieceForValidSquares(this.state.cartMap);
-   
-    const objToPost = {
-      turn: this.state.turn,
-      currentScore: this.state.currentScore,
-      average: this.state.average,
-      withdrawals: this.state.withdrawals,
-      isExistMoves: isExistPiece,
-      isCartEmpty: this.isCartEmpty()
-    };
-   
+      const isExistPiece = this.isExistPieceForValidSquares([
+        ...this.state.cartMap
+      ]);
+
+      const objToPost = {
+        turn: this.state.turn,
+        currentScore: this.state.currentScore,
+        average: this.state.average,
+        withdrawals: this.state.withdrawals,
+        isExistMoves: isExistPiece,
+        isCartEmpty: this.isCartEmpty()
+      };
+
       return fetch("/games/postStats", {
         method: "POST",
         body: JSON.stringify(objToPost),
@@ -1010,5 +1021,25 @@ export default class Game extends React.Component {
         }
       });
     }
+  }
+
+  fetchAmIWinOrLost() {
+    return fetch("/games/amIWinOrLost", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
+      })
+      .then(AmIWinOrLost => {
+        this.setState(() => ({
+          isUserDone: true,
+          isWin: AmIWinOrLost.win,
+          isLost: AmIWinOrLost.lost
+        }));
+      });
   }
 }

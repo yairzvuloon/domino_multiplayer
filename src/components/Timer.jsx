@@ -42,7 +42,7 @@ class Timer extends React.Component {
   }
 
   countUp() {
-   if(this.props.isGameStarted)
+   if(this.props.isGameStarted&&!this.props.isGameDone)
    {
     this.setState(prevState => {
       return {

@@ -124,10 +124,18 @@ gamesListManagement.get(
 gamesListManagement.get(
   "/isGameDone",
   auth.userAuthentication,
-  games.isGameDone,
   (req, res) => {
     let isGameDone = games.isGameDone(req);
     res.status(200).json(isGameDone);
+  }
+);
+
+gamesListManagement.get(
+  "/amIWinOrLost",
+  auth.userAuthentication,
+  (req, res) => {
+    let amIWinOrLost = games.amIWinOrLost(req);
+    res.status(200).json(amIWinOrLost);
   }
 );
 

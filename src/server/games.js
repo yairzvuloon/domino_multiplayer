@@ -38,10 +38,10 @@ function addGameToGamesList(req, res, next) {
     obj.numPlayerToStart = JSON.parse(obj.numPlayerToStart);
     obj.currentPlayerIndex = 0;
     obj.numberOfSubscribes = 0;
-    obj.lostQueue=[];
-    obj.winQueue=[];
-    obj.finalWinner=null;
-    obj.finalLost=null;
+    obj.lostQueue = [];
+    obj.winQueue = [];
+    obj.finalWinner = null;
+    obj.finalLost = null;
     gamesList[req.session.id] = obj;
     next();
   }
@@ -253,9 +253,7 @@ function getUsersRoomData(req) {
   const gameData = gamesList[roomId];
   if (gameData !== undefined) {
     return {
-      isAllPlayersIn:
-        gameData.numberOfSubscribes === gameData.numPlayerToStart
-      ,
+      isAllPlayersIn: gameData.numberOfSubscribes === gameData.numPlayerToStart,
       names: gameData.subscribesIdStrings,
       numberOfSubscribes: gameData.numberOfSubscribes
     };
@@ -264,27 +262,83 @@ function getUsersRoomData(req) {
   }
 }
 
+// function moveToNextTurn(req, res, next) {
+//   const roomId = JSON.parse(getMyRoomId(req)).id;
+//   const gameData = gamesList[roomId];
+//   const indexPlayer = gameData.currentPlayerIndex;
+//   if (req.session.id === gameData.subscribesIdStrings[indexPlayer].id) {
+//     if (indexPlayer + 1 === JSON.parse(gameData.numPlayerToStart)) {
+//       gameData.currentPlayerIndex = 0;
+//     } else {
+//       gameData.currentPlayerIndex++;
+//     }
+//   }
+// }
+
 function moveToNextTurn(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   const indexPlayer = gameData.currentPlayerIndex;
   if (req.session.id === gameData.subscribesIdStrings[indexPlayer].id) {
-    if (indexPlayer + 1 === JSON.parse(gameData.numPlayerToStart)) {
+    if (indexPlayer + 1 === JSON.parse(gameData.numberOfSubscribes)) {
+      const nextPlayer1 = gameData.subscribesIdStrings[0];
       gameData.currentPlayerIndex = 0;
+      if (
+        nextPlayer1.id === gameData.finalWinner ||
+        nextPlayer1.id === gameData.finalLost
+      ) {
+        gameData.currentPlayerIndex = 1;
+      }
     } else {
+      const nextPlayer2 =
+        gameData.subscribesIdStrings[gameData.currentPlayerIndex + 1];
+      if (
+        nextPlayer2.id === gameData.finalWinner ||
+        nextPlayer2.id === gameData.finalLost
+      ) {
+        gameData.currentPlayerIndex++;
+        if (
+          gameData.currentPlayerIndex + 1 ===
+          JSON.parse(gameData.numberOfSubscribes)
+        ) {
+          gameData.currentPlayerIndex = -1;
+        }
+      }
+
       gameData.currentPlayerIndex++;
     }
   }
 }
 
+// function isMyTurn(req) {
+//   const roomId = JSON.parse(getMyRoomId(req)).id;
+//   const gameData = gamesList[roomId];
+//   if (gameData !== undefined) {
+//     const indexPlayer = gameData.currentPlayerIndex;
+
+//     return req.session.id === gameData.subscribesIdStrings[indexPlayer].id;
+//   } else return false;
+// }
+
 function isMyTurn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
+
   const gameData = gamesList[roomId];
+
   if (gameData !== undefined) {
     const indexPlayer = gameData.currentPlayerIndex;
+    const currPlayer =
+      gameData.subscribesIdStrings[gameData.currentPlayerIndex];
+    if (
+      currPlayer.id === gameData.finalWinner ||
+      currPlayer.id === gameData.finalLost
+    ) {
+      return false;
+    }
 
     return req.session.id === gameData.subscribesIdStrings[indexPlayer].id;
-  } else return false;
+  }
+  return false;
 }
 
 function getCurrentPlayer(req) {
@@ -302,26 +356,153 @@ function isGameDone(req) {
   const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = getMyRoomIdObj.id;
   const gameData = gamesList[roomId];
-  let playerCounter = 0;
-  for (let i = 0; i < gameData.numberOfSubscribes; i++)
-    if (gameData.subscribesIdStrings[i].stats === null) playerCounter++;
-
-  return playerCounter <= 1;
+  console.log(
+    "isGameDone: " + gameData.finalWinner !== null &&
+      gameData.finalLost !== null
+  );
+  return gameData.finalWinner !== null && gameData.finalLost !== null;
 }
 
-/*const objToPost = {
-  turn: this.state.turn,
-  currentScore: this.state.currentScore,
-  average: this.state.average,
-  withdrawals: this.state.withdrawals,
-  isUserWin: this.isWin,
-  isUserLost:this.isLost,
-  isExistMoves: this.isExistPieceForValidSquares([this.state.cartMap]),
-  isCartEmpty:this.isCartEmpty() 
-};*/
-
+/* const objToPost = {
+        turn: this.state.turn,
+        currentScore: this.state.currentScore,
+        average: this.state.average,
+        withdrawals: this.state.withdrawals,
+        isExistMoves: isExistPiece,
+        isCartEmpty: this.isCartEmpty()
+      };
+*/
 
 function postStats(req, res, next) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+  const gameData = gamesList[roomId];
+
+  const myIndex = userRoomId[req.session.id].subscribesIdStringsIndex;
+
+  const objToPost = JSON.parse(req.body);
+
+  gameData.subscribesIdStrings[myIndex].stats = objToPost;
+
+  console.log(JSON.stringify(objToPost));
+
+  pushIdToQueue(req, objToPost);
+
+  //Adding final winner
+  if (gameData.finalWinner === null && gameData.winQueue.length > 0) {
+    gameData.finalWinner = gameData.winQueue.shift();
+    ////If there are 2 subscribes, the other user most to be the lost user.
+    if (gameData.numberOfSubscribes === 2) {
+      for (let i = 0; i < 2; i++)
+        if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner)
+        gameData.finalLost = gameData.subscribesIdStrings[i].id;
+    }
+    ////If there are 3 subscribes, and one of them is final winner.
+  }
+
+  if (
+    gameData.finalWinner +  gameData.finalLost +  gameData.winQueue.length +  gameData.lostQueue.length ===
+    gameData.numberOfSubscribes &&
+    gameData.finalLost === null
+  ) {
+    //if all the users in arrays, and numberOfSubscribes=2 and finalLost === null, so finalWinner=null
+
+    let finalLostTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner);
+    let finalWinnerTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner);
+    if (finalLostTemp) {
+      finalLostTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner).lostId;
+    }
+    if (finalWinnerTemp) {
+      finalWinnerTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner).winId;
+    }
+
+    if ( gameData.numberOfSubscribes === 2) {
+      gameData.finalLost = finalLostTemp;
+      gameData.finalWinner = finalWinnerTemp;
+    } else if ( gameData.numberOfSubscribes === 3) {
+      if ( gameData.finalWinner === null &&  gameData.lostQueue.length > 0) {
+        gameData.finalLost = finalLostTemp;
+        gameData.finalWinner = finalWinnerTemp;
+      } else if ( gameData.finalWinner !== null &&  gameData.lostQueue.length === 1)
+      gameData.finalLost =  gameData.lostQueue[0];
+      else if ( gameData.finalWinner !== null &&  gameData.ostQueue.length === 2)
+      gameData.finalLost =  gameData.finalLostTemp;
+    }
+  }
+}
+
+//         if (lostQueue.length === 1)
+//         finalLost = lostQueue.shift();
+//         else if (lostQueue.length === 2)
+//           finalLost = getUserWithMaxAndMinScore(lostQueue, finalWinner).lostId;
+//       }
+//     }
+//   } else if (finalLost === null && lostQueue.length > 0) {
+//     if (lostQueue.length === 1) {
+//       finalLost = lostQueue.shift();
+//     } else if (lostQueue.length === 2 && finalWinner !== null) {
+//       let max = 0;
+//       let lostId = null;
+//       subscribesIdStrings.forEach(user => {
+//         if (user.stats !== null && user.stats.currentScore > max) {
+//           if (finalWinner !== user.id) {
+//             max = user.stats.currentScore;
+//             lostId = user.id;
+//           }
+//         }
+//       });
+//       finalLost = lostId;
+//       // gameData.finalLost === null && gameData.lostQueue.length > 0
+//       //  gameData.finalWinner = gameData.winQueue.shift();
+//     } else if (
+//       lostQueue.length === numberOfSubscribes &&
+//       finalWinner === null
+//     ) {
+//       let min = 0;
+//       let max = 0;
+//       let winId = null;
+//       let lostId = null;
+//       subscribesIdStrings.forEach(user => {
+//         if (user.stats !== null && user.stats.currentScore < min) {
+//           min = user.stats.currentScore;
+//           winId = user.id;
+//         }
+//         if (user.stats !== null && user.stats.currentScore > max) {
+//           max = user.stats.currentScore;
+//           lostId = user.id;
+//         }
+//       });
+//       finalLost = lostId;
+//       finalWinner = winId;
+//     }
+//   }
+// }
+
+function getUserWithMaxAndMinScore(array, userToSkip = null) {
+  let min = 0;
+  let max = 0;
+  let winId = null;
+  let lostId = null;
+
+  array.forEach(user => {
+    if (user.stats !== null && user.stats.currentScore > max) {
+      if (userToSkip !== user.id) {
+        max = user.stats.currentScore;
+        lostId = user.id;
+      }
+    }
+    if (user.stats !== null && user.stats.currentScore < min) {
+      if (userToSkip !== user.id) {
+        min = user.stats.currentScore;
+        winId = user.id;
+      }
+    }
+  });
+
+  return { lostId: lostId, winId: winId };
+}
+
+function amIWinOrLost(req, res, next) {
   const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = getMyRoomIdObj.id;
 
@@ -329,19 +510,110 @@ function postStats(req, res, next) {
 
   const gameData = gamesList[roomId];
 
-  const objToPost = JSON.parse(req.body);
+  // obj.lostQueue = [];
+  //   obj.winQueue = [];
+  //   obj.finalWinner = null;
+  //   obj.finalLost = null;
 
-  gameData.subscribesIdStrings[myIndex].stats = objToPost;
+  // if (gameData.finalWinner === null && gameData.winQueue.length > 0) {
+  //   gameData.finalWinner = gameData.winQueue.shift();
+  //   if (gameData.numberOfSubscribes === 2) {
+  //     for (let i = 0; i < 2; i++) {
+  //       if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner) {
+  //         gameData.finalLost = gameData.subscribesIdStrings[i].id;
+  //       }
+  //     }
+  //   }
+  // }
 
-  if(objToPost.isUserLost&& gameData.winQueue.length<=gameData.numberOfSubscribes-1)
-  {
-    gameData.winQueue.push(myIndex);
-  }
-  else if(!objToPost.isUserWin&& gameData.lostQueue.length<=gameData.numberOfSubscribes){
-    gameData.lostQueue.push(myIndex);
+  // if (gameData.finalLost === null && gameData.lostQueue.length > 0) {
+  //   if (gameData.lostQueue.length === 1) {
+  //     gameData.finalLost = gameData.lostQueue.shift();
+  //   } else if (
+  //     gameData.lostQueue.length === 2 &&
+  //     gameData.finalWinner !== null
+  //   ) {
+  //     let max = 0;
+  //     let lostId = null;
+  //     gameData.subscribesIdStrings.forEach(user => {
+  //       if (user.stats !== null && user.stats.currentScore > max) {
+  //         if (gameData.finalWinner !== user.id) {
+  //           max = user.stats.currentScore;
+  //           lostId = user.id;
+  //         }
+  //       }
+  //     });
+  //     gameData.finalLost = lostId;
+  //     // gameData.finalLost === null && gameData.lostQueue.length > 0
+  //     //  gameData.finalWinner = gameData.winQueue.shift();
+  //   } else if (
+  //     gameData.lostQueue.length === gameData.numberOfSubscribes &&
+  //     gameData.finalWinner === null
+  //   ) {
+  //     let min = 0;
+  //     let max = 0;
+  //     let winId = null;
+  //     let lostId = null;
+  //     gameData.subscribesIdStrings.forEach(user => {
+  //       if (user.stats !== null && user.stats.currentScore < min) {
+  //         min = user.stats.currentScore;
+  //         winId = user.id;
+  //       }
+  //       if (user.stats !== null && user.stats.currentScore > max) {
+  //         max = user.stats.currentScore;
+  //         lostId = user.id;
+  //       }
+  //     });
+  //     gameData.finalLost = lostId;
+  //     gameData.finalWinner = winId;
+  //   }
+  // }
+
+  if (gameData.finalWinner === req.session.id)
+    return { win: true, lost: false };
+  else if (gameData.finalLost === req.session.id)
+    return { win: false, lost: true };
+  else return { win: false, lost: false };
+}
+
+function pushIdToQueue(req, objToPost) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+  const gameData = getMyGameData(req);
+
+  const { finalWinner, numberOfSubscribes, winQueue, lostQueue } = gameData;
+  const userId = req.session.id;
+
+  if (
+    userId !== finalWinner &&
+    objToPost.isCartEmpty &&
+    winQueue.length < numberOfSubscribes - 1
+  ) {
+    winQueue.push(userId);
+  } else if (
+    !objToPost.isCartEmpty ||
+    (!objToPost.isExistMoves &&
+      lostQueue.length < numberOfSubscribes &&
+      !isUserIdExistInArray(gameData.lostQueue, userId))
+  ) {
+    lostQueue.push(userId);
   }
 }
 
+function getMyGameData(req) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+  const gameData = gamesList[roomId];
+  return gameData;
+}
+
+function isUserIdExistInArray(array, id) {
+  let val = false;
+  for (let i = 0; i < array.length; i++) {
+    if (array[i] === id) val = true;
+  }
+  return val;
+}
 
 module.exports = {
   gameAuthentication,
@@ -363,5 +635,6 @@ module.exports = {
   isHost,
   myRoomData: getMyRoomData,
   isGameDone,
-  postStats
+  postStats,
+  amIWinOrLost
 };
