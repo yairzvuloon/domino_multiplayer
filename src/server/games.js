@@ -61,7 +61,8 @@ function getValidLocations(req, res, next) {
   if (gameData !== undefined)
     return JSON.stringify({
       boardMap: gameData.boardMap,
-      validLocationsArray: gameData.validLocationsArray
+      validLocationsArray: gameData.validLocationsArray,
+      numOfPiece: gameData.DominoStackLogic.getNumOfPieces()
     });
   else {
     return JSON.stringify({
@@ -248,7 +249,7 @@ function removeValidLocation(roomId, row, col, card) {
 function getCard(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
-  moveToNextTurn(req);
+  //moveToNextTurn(req);
   return JSON.stringify({ card: gameData.DominoStackLogic.getCard() });
 }
 
@@ -386,7 +387,17 @@ function postStats(req, res, next) {
 
   console.log(JSON.stringify(objToPost));
   if (objToPost.isCartEmpty) updateWinner(req, objToPost);
-  else updateLose(req, objToPost);
+  else if (!objToPost.isCartEmpty && !objToPost.isMoveExist)
+    updateLose(req, objToPost);
+  else if (!objToPost.isCartEmpty && objToPost.isMoveExist) {
+    for (let i = 0; i < gameData.lostQueue.length; i++) {
+      if (gameData.lostQueue[i].id === req.session.id) {
+        console.log("object just removed: " + gameData.lostQueue[i].id);
+        gameData.lostQueue.splice(i, 1);
+      }
+    }
+  }
+  // moveToNextTurn(req, res, next);
 }
 
 function updateLose(req, objToPost) {
@@ -398,19 +409,36 @@ function updateLose(req, objToPost) {
   if (gameData.finalWinner !== null && gameData.secondPlaceWinner !== null) {
     gameData.finalLost = req.session.id;
   } else {
+    let isExist=false
+    for (let i = 0; i < gameData.lostQueue.length; i++) {
+      if (gameData.lostQueue[i].id === req.session.id) {
+        isExist=true;
+      }
+    }
+    if(!isExist)
     gameData.lostQueue.push({
       id: req.session.id,
       score: gameData.subscribesIdStrings[myIndex].stats.score
     });
     gameData.numOfUsersDone++;
     gameData.lostQueue.sort((a, b) => b.score - a.score);
+    console.log("lostQueue after sort:" + JSON.stringify(gameData.lostQueue));
 
     if (gameData.finalWinner !== null && gameData.finalLost.length === 2) {
-      gameData.finalLost = gameData[0].id;
+      gameData.finalLost = gameData.lostQueue[0].id;
       gameData.isGameDone = true;
-    } else if (gameData.finalLost.length === 3) {
-      gameData.finalLost = gameData[0].id;
-      gameData.finalWinner = gameData[2].id;
+    } else if (
+      gameData.finalWinner === null &&
+      gameData.lostQueue.length === 2
+    ) {
+      if (gameData.numberOfSubscribes === 2) {
+        gameData.finalLost = gameData.lostQueue[1].id;
+        gameData.finalWinner = gameData.lostQueue[0].id;
+        gameData.isGameDone = true;
+      }
+    } else if (gameData.lostQueue.length === 3) {
+      gameData.finalLost = gameData.lostQueue[0].id;
+      gameData.finalWinner = gameData.lostQueue[2].id;
       gameData.isGameDone = true;
     }
   }
