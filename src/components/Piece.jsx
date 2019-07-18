@@ -60,9 +60,7 @@ export class ValidPiece extends React.Component {
       console.log("afters scrolled");
     }
   }
-  componentDidUpdate() {
-    this.scrollIntoCenter();
-  }
+
   componentDidMount() {
     this.scrollIntoCenter();
   }
