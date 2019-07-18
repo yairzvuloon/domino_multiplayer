@@ -40,8 +40,12 @@ function addGameToGamesList(req, res, next) {
     obj.numberOfSubscribes = 0;
     obj.lostQueue = [];
     obj.winQueue = [];
+
     obj.finalWinner = null;
+    obj.secondPlaceWinner = null;
     obj.finalLost = null;
+    obj.isGameDone = false;
+    obj.numOfUsersDone = 0;
     gamesList[req.session.id] = obj;
     next();
   }
@@ -356,11 +360,7 @@ function isGameDone(req) {
   const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = getMyRoomIdObj.id;
   const gameData = gamesList[roomId];
-  console.log(
-    "isGameDone: " + gameData.finalWinner !== null &&
-      gameData.finalLost !== null
-  );
-  return gameData.finalWinner !== null && gameData.finalLost !== null;
+  return gameData.isGameDone;
 }
 
 /* const objToPost = {
@@ -385,98 +385,131 @@ function postStats(req, res, next) {
   gameData.subscribesIdStrings[myIndex].stats = objToPost;
 
   console.log(JSON.stringify(objToPost));
+  if (objToPost.isCartEmpty) updateWinner(req, objToPost);
+  else updateLose(req, objToPost);
+}
 
-  pushIdToQueue(req, objToPost);
+function updateLose(req, objToPost) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+  const gameData = gamesList[roomId];
+  const myIndex = userRoomId[req.session.id].subscribesIdStringsIndex;
 
-  //Adding final winner
-  if (gameData.finalWinner === null && gameData.winQueue.length > 0) {
-    gameData.finalWinner = gameData.winQueue.shift();
-    ////If there are 2 subscribes, the other user most to be the lost user.
-    if (gameData.numberOfSubscribes === 2) {
-      for (let i = 0; i < 2; i++)
-        if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner)
-        gameData.finalLost = gameData.subscribesIdStrings[i].id;
-    }
-    ////If there are 3 subscribes, and one of them is final winner.
-  }
+  if (gameData.finalWinner !== null && gameData.secondPlaceWinner !== null) {
+    gameData.finalLost = req.session.id;
+  } else {
+    gameData.lostQueue.push({
+      id: req.session.id,
+      score: gameData.subscribesIdStrings[myIndex].stats.score
+    });
+    gameData.numOfUsersDone++;
+    gameData.lostQueue.sort((a, b) => b.score - a.score);
 
-  if (
-    gameData.finalWinner +  gameData.finalLost +  gameData.winQueue.length +  gameData.lostQueue.length ===
-    gameData.numberOfSubscribes &&
-    gameData.finalLost === null
-  ) {
-    //if all the users in arrays, and numberOfSubscribes=2 and finalLost === null, so finalWinner=null
-
-    let finalLostTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner);
-    let finalWinnerTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner);
-    if (finalLostTemp) {
-      finalLostTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner).lostId;
-    }
-    if (finalWinnerTemp) {
-      finalWinnerTemp = getUserWithMaxAndMinScore( gameData.lostQueue,  gameData.finalWinner).winId;
-    }
-
-    if ( gameData.numberOfSubscribes === 2) {
-      gameData.finalLost = finalLostTemp;
-      gameData.finalWinner = finalWinnerTemp;
-    } else if ( gameData.numberOfSubscribes === 3) {
-      if ( gameData.finalWinner === null &&  gameData.lostQueue.length > 0) {
-        gameData.finalLost = finalLostTemp;
-        gameData.finalWinner = finalWinnerTemp;
-      } else if ( gameData.finalWinner !== null &&  gameData.lostQueue.length === 1)
-      gameData.finalLost =  gameData.lostQueue[0];
-      else if ( gameData.finalWinner !== null &&  gameData.ostQueue.length === 2)
-      gameData.finalLost =  gameData.finalLostTemp;
+    if (gameData.finalWinner !== null && gameData.finalLost.length === 2) {
+      gameData.finalLost = gameData[0].id;
+      gameData.isGameDone = true;
+    } else if (gameData.finalLost.length === 3) {
+      gameData.finalLost = gameData[0].id;
+      gameData.finalWinner = gameData[2].id;
+      gameData.isGameDone = true;
     }
   }
 }
 
-//         if (lostQueue.length === 1)
-//         finalLost = lostQueue.shift();
-//         else if (lostQueue.length === 2)
-//           finalLost = getUserWithMaxAndMinScore(lostQueue, finalWinner).lostId;
-//       }
+function updateWinner(req, objToPost) {
+  const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = getMyRoomIdObj.id;
+  const gameData = gamesList[roomId];
+
+  if (gameData.finalWinner === null && objToPost.isCartEmpty) {
+    gameData.finalWinner = req.session.id;
+    if (gameData.numberOfSubscribes === 2) {
+      for (let i = 0; i < 2; i++) {
+        if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner)
+          gameData.finalLost = gameData.subscribesIdStrings[i].id;
+      }
+      gameData.isGameDone = true;
+    }
+  } else if (gameData.secondPlaceWinner === null && objToPost.isCartEmpty) {
+    gameData.secondPlaceWinner = req.session.id;
+
+    for (let i = 0; i < gameData.numberOfSubscribes; i++) {
+      if (
+        gameData.subscribesIdStrings[i].id !== gameData.finalWinner &&
+        gameData.subscribesIdStrings[i].id !== gameData.secondPlaceWinner
+      )
+        gameData.finalLost = gameData.subscribesIdStrings[i].id;
+    }
+    gameData.isGameDone = true;
+  }
+}
+
+//pushIdToQueue(req, objToPost);
+
+//   //Adding final winner
+//   if (gameData.finalWinner === null && gameData.winQueue.length > 0) {
+//     gameData.finalWinner = gameData.winQueue.shift();
+//     ////If there are 2 subscribes, the other user most to be the lost user.
+//     if (gameData.numberOfSubscribes === 2) {
+//       for (let i = 0; i < 2; i++)
+//         if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner)
+//           gameData.finalLost = gameData.subscribesIdStrings[i].id;
 //     }
-//   } else if (finalLost === null && lostQueue.length > 0) {
-//     if (lostQueue.length === 1) {
-//       finalLost = lostQueue.shift();
-//     } else if (lostQueue.length === 2 && finalWinner !== null) {
-//       let max = 0;
-//       let lostId = null;
-//       subscribesIdStrings.forEach(user => {
-//         if (user.stats !== null && user.stats.currentScore > max) {
-//           if (finalWinner !== user.id) {
-//             max = user.stats.currentScore;
-//             lostId = user.id;
-//           }
-//         }
-//       });
-//       finalLost = lostId;
-//       // gameData.finalLost === null && gameData.lostQueue.length > 0
-//       //  gameData.finalWinner = gameData.winQueue.shift();
-//     } else if (
-//       lostQueue.length === numberOfSubscribes &&
-//       finalWinner === null
-//     ) {
-//       let min = 0;
-//       let max = 0;
-//       let winId = null;
-//       let lostId = null;
-//       subscribesIdStrings.forEach(user => {
-//         if (user.stats !== null && user.stats.currentScore < min) {
-//           min = user.stats.currentScore;
-//           winId = user.id;
-//         }
-//         if (user.stats !== null && user.stats.currentScore > max) {
-//           max = user.stats.currentScore;
-//           lostId = user.id;
-//         }
-//       });
-//       finalLost = lostId;
-//       finalWinner = winId;
+//     ////If there are 3 subscribes, and one of them is final winner.
+//   }
+//   let counter = 0;
+//   if (gameData.finalWinner) {
+//     counter++;
+//   }
+
+//   if (gameData.finalLost) {
+//     counter++;
+//   }
+
+//   if (
+//     counter + gameData.winQueue.length + gameData.lostQueue.length >= gameData.numberOfSubscribes-1 &&
+//     gameData.finalLost === null
+//   ) {
+//     //if all the users in arrays, and numberOfSubscribes=2 and finalLost === null, so finalWinner=null
+
+//     let finalLostTemp = getUserWithMaxAndMinScore(
+//       gameData.lostQueue,
+//       gameData.finalWinner
+//     );
+//     let finalWinnerTemp = getUserWithMaxAndMinScore(
+//       gameData.lostQueue,
+//       gameData.finalWinner
+//     );
+//     if (finalLostTemp) {
+//       finalLostTemp = getUserWithMaxAndMinScore(
+//         gameData.lostQueue,
+//         gameData.finalWinner
+//       ).lostId;
+//     }
+//     if (finalWinnerTemp) {
+//       finalWinnerTemp = getUserWithMaxAndMinScore(
+//         gameData.lostQueue,
+//         gameData.finalWinner
+//       ).winId;
+//     }
+
+//     if (gameData.numberOfSubscribes === 2) {
+//       gameData.finalLost = finalLostTemp;
+//       gameData.finalWinner = finalWinnerTemp;
+//     } else if (gameData.numberOfSubscribes === 3) {
+//       if (gameData.finalWinner === null && gameData.lostQueue.length > 0) {
+//         gameData.finalLost = finalLostTemp;
+//         gameData.finalWinner = finalWinnerTemp;
+//       } else if (
+//         gameData.finalWinner !== null &&
+//         gameData.lostQueue.length === 1
+//       )
+//         gameData.finalLost = gameData.lostQueue[0];
+//       else if (gameData.finalWinner !== null && gameData.lostQueue.length === 2)
+//         gameData.finalLost = gameData.finalLostTemp;
 //     }
 //   }
-// }
+//}
 
 function getUserWithMaxAndMinScore(array, userToSkip = null) {
   let min = 0;
@@ -505,70 +538,7 @@ function getUserWithMaxAndMinScore(array, userToSkip = null) {
 function amIWinOrLost(req, res, next) {
   const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = getMyRoomIdObj.id;
-
-  const myIndex = getMyRoomIdObj.subscribesIdStringsIndex;
-
   const gameData = gamesList[roomId];
-
-  // obj.lostQueue = [];
-  //   obj.winQueue = [];
-  //   obj.finalWinner = null;
-  //   obj.finalLost = null;
-
-  // if (gameData.finalWinner === null && gameData.winQueue.length > 0) {
-  //   gameData.finalWinner = gameData.winQueue.shift();
-  //   if (gameData.numberOfSubscribes === 2) {
-  //     for (let i = 0; i < 2; i++) {
-  //       if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner) {
-  //         gameData.finalLost = gameData.subscribesIdStrings[i].id;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // if (gameData.finalLost === null && gameData.lostQueue.length > 0) {
-  //   if (gameData.lostQueue.length === 1) {
-  //     gameData.finalLost = gameData.lostQueue.shift();
-  //   } else if (
-  //     gameData.lostQueue.length === 2 &&
-  //     gameData.finalWinner !== null
-  //   ) {
-  //     let max = 0;
-  //     let lostId = null;
-  //     gameData.subscribesIdStrings.forEach(user => {
-  //       if (user.stats !== null && user.stats.currentScore > max) {
-  //         if (gameData.finalWinner !== user.id) {
-  //           max = user.stats.currentScore;
-  //           lostId = user.id;
-  //         }
-  //       }
-  //     });
-  //     gameData.finalLost = lostId;
-  //     // gameData.finalLost === null && gameData.lostQueue.length > 0
-  //     //  gameData.finalWinner = gameData.winQueue.shift();
-  //   } else if (
-  //     gameData.lostQueue.length === gameData.numberOfSubscribes &&
-  //     gameData.finalWinner === null
-  //   ) {
-  //     let min = 0;
-  //     let max = 0;
-  //     let winId = null;
-  //     let lostId = null;
-  //     gameData.subscribesIdStrings.forEach(user => {
-  //       if (user.stats !== null && user.stats.currentScore < min) {
-  //         min = user.stats.currentScore;
-  //         winId = user.id;
-  //       }
-  //       if (user.stats !== null && user.stats.currentScore > max) {
-  //         max = user.stats.currentScore;
-  //         lostId = user.id;
-  //       }
-  //     });
-  //     gameData.finalLost = lostId;
-  //     gameData.finalWinner = winId;
-  //   }
-  // }
-
   if (gameData.finalWinner === req.session.id)
     return { win: true, lost: false };
   else if (gameData.finalLost === req.session.id)
@@ -587,7 +557,8 @@ function pushIdToQueue(req, objToPost) {
   if (
     userId !== finalWinner &&
     objToPost.isCartEmpty &&
-    winQueue.length < numberOfSubscribes - 1
+    winQueue.length < numberOfSubscribes - 1 &&
+    !isUserIdExistInArray(gameData.winQueue, userId)
   ) {
     winQueue.push(userId);
   } else if (

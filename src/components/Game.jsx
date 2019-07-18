@@ -104,6 +104,7 @@ export default class Game extends React.Component {
     this.isTimerResetNeeded = false;
     this._isMounted = false;
     this.isCurrentUserGotCart = false;
+    this.isUserUpdatedStats = false;
   }
   render() {
     const drawButton = (
@@ -166,7 +167,7 @@ export default class Game extends React.Component {
       if (!this.state.isAllPlayersInRoom) {
         gameSentence = <p>we waiting for more players </p>;
       } else {
-        if (this.state.isWin) {
+        if (this.state.isUserDone&&this.state.isWin) {
           gameSentence = <p>YOU WIN!!!</p>;
         } else if (this.state.isGameDone && this.state.isLost) {
           gameSentence = <p>YOU LOST:(</p>;
@@ -335,7 +336,10 @@ export default class Game extends React.Component {
           });
         });
     }
-    if (this.state.isUserDone) this.fetchPostStats();
+    if (this.state.isUserDone && !this.isUserUpdatedStats) {
+      this.isUserUpdatedStats = true;
+      this.fetchPostStats();
+    }
 
     this.fetchNextTurn();
   }
@@ -862,6 +866,7 @@ export default class Game extends React.Component {
   }
 
   removePieceFromCart() {
+  let _isWin=false;
     const { index } = this.state.selectedCard;
     this.setState(
       prevState => {
@@ -875,17 +880,18 @@ export default class Game extends React.Component {
         if (isEmptyCart) {
           //isGameStartedCopy = false;
           isUserDone = isEmptyCart;
-          //this.isWin = true;
+          _isWin = true;
         }
         return {
           cartMap: newCartMap,
           //isGameStarted: isGameStartedCopy,
           isUserDone: isUserDone,
-          isWin: true
+          isWin: _isWin
         };
       },
       () => {
-        if (this.state.isUserDone) {
+        if (this.state.isUserDone && !this.isUserUpdatedStats) {
+          this.isUserUpdatedStats = true;
           this.fetchPostStats();
         }
       }
