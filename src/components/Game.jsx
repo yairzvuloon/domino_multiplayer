@@ -1003,7 +1003,7 @@ export default class Game extends React.Component {
   }
 
   fetchPostStats() {
-    if (this.state.isUserDone) {
+    if (this.state.isGameDone&&this.state.isUserDone) {
       const isExistPiece = this.isExistPieceForValidSquares([
         ...this.state.cartMap
       ]);
