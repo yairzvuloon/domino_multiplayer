@@ -313,6 +313,7 @@ function moveToNextTurn(req, res, next) {
       gameData.currentPlayerIndex++;
     }
   }
+  next();
 }
 
 // function isMyTurn(req) {
@@ -398,6 +399,7 @@ function postStats(req, res, next) {
     }
   }
   // moveToNextTurn(req, res, next);
+  next();
 }
 
 function updateLose(req, objToPost) {

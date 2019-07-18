@@ -543,10 +543,14 @@ export default class Game extends React.Component {
           const newBoardMap = JSON.parse(serverOutput).boardMap;
           const numOfPieceInStack = JSON.parse(serverOutput).numOfPiece;
 
-          let _isMoveExist =
-            (this.isExistPieceForValidSquares([...this.state.cartMap]) &&
-              numOfPieceInStack === 0) ||
-            this.isTheFirstTurn();
+          let _isMoveExist=true;
+         if(
+           (!this.isExistPieceForValidSquares([...this.state.cartMap]) &&
+              numOfPieceInStack === 0) &&
+            !this.isTheFirstTurn())
+            {
+               _isMoveExist=false;
+            }
 
           this.setState(() => ({
             boardMap: newBoardMap,
