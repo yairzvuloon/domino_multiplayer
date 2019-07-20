@@ -72,7 +72,7 @@ gamesListManagement.get(
 );
 
 gamesListManagement.get(
-  "/isAllPlayersIn",
+  "/getUsersRoomData",
   auth.userAuthentication,
   games.isUserInRoom,
   (req, res) => {

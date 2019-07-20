@@ -27,10 +27,10 @@ function addGameToGamesList(req, res, next) {
 
     const obj = JSON.parse(req.body);
     obj.id = req.session.id;
-    // obj.subscribesIdStrings[0] = req.session.id;
+    // obj.subscribesList[0] = req.session.id;
     // userRoomId[req.session.id] = {
     //   id: req.session.id,
-    //   subscribesIdStringsIndex: 0
+    //   subscribesListIndex: 0
     // };
     obj.DominoStackLogic = new Manager.DominoStack();
     obj.validLocationsArray = createEmptyValidLocations();
@@ -88,13 +88,13 @@ function getValidLocations(req, res, next) {
 function removeGameFromGamesList(req, res, next) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
-  // const index = roomIdObj.subscribesIdStringsIndex;
+  // const index = roomIdObj.subscribesListIndex;
   const gameData = gamesList[roomId];
   removeUserFromGame(req, res, next);
 
   if (gameData !== undefined) {
     for (var i = 0; i < gameData.numberOfSubscribes; i++) {
-      userRoomId[gameData.subscribesIdStrings[i]] = undefined;
+      userRoomId[gameData.subscribesList[i]] = undefined;
     }
     chat.removeChatRoom(roomId);
     delete gamesList[roomId];
@@ -106,17 +106,17 @@ function removeGameFromGamesList(req, res, next) {
 function removeUserFromGame(req, res, next) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
-  const index = roomIdObj.subscribesIdStringsIndex;
+  const index = roomIdObj.subscribesListIndex;
   if (roomId !== "") {
     const gameData = gamesList[roomId];
     if (gameData.numberOfSubscribes <= 0) {
       res.sendStatus(401);
     } else {
-      gamesList[roomId].subscribesIdStrings.splice(index, 1);
+      gamesList[roomId].subscribesList.splice(index, 1);
       gamesList[roomId].numberOfSubscribes--;
       userRoomId[req.session.id] = undefined;
 
-      //gameData.subscribesIdStrings.splice(index, 1);
+      //gameData.subscribesList.splice(index, 1);
       // gameData.numberOfSubscribes--;
       // gamesList[roomId] = JSON.stringify(gameData);
     }
@@ -128,13 +128,13 @@ function getMyRoomId(req) {
   if (userRoomId[req.session.id] !== undefined) {
     return JSON.stringify(userRoomId[req.session.id]);
   }
-  return JSON.stringify({ id: "", subscribesIdStringsIndex: "" });
+  return JSON.stringify({ id: "", subscribesListIndex: "" });
 }
 
 function getMyRoomData(req) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
-  // const index = roomIdObj.subscribesIdStringsIndex;
+  // const index = roomIdObj.subscribesListIndex;
   const gameData = gamesList[roomId];
   return JSON.stringify(gameData);
 }
@@ -159,16 +159,16 @@ function addUserToGame(req, res, next) {
   if (gameData.numberOfSubscribes >= gameData.numPlayerToStart) {
     res.sendStatus(401);
   } else {
-    gamesList[roomID].subscribesIdStrings[gameData.numberOfSubscribes] = {
+    gamesList[roomID].subscribesList[gameData.numberOfSubscribes] = {
       id: req.session.id,
       name: name,
       stats: null
     };
     userRoomId[req.session.id] = {
       id: roomID,
-      subscribesIdStringsIndex: gamesList[roomID].numberOfSubscribes
+      subscribesListIndex: gamesList[roomID].numberOfSubscribes
     };
-    //gameData.subscribesIdStrings[gameData.numberOfSubscribes] = req.session.id;
+    //gameData.subscribesList[gameData.numberOfSubscribes] = req.session.id;
     gameData.numberOfSubscribes++;
     gamesList[roomID] = gameData;
     next();
@@ -256,14 +256,31 @@ function getCard(req) {
 function getUsersRoomData(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
-  if (gameData !== undefined) {
+  if (
+    gameData !== undefined &&
+    gameData.finalLost !== null &&
+    gameData.finalWinner !== null
+  ) {
     return {
       isAllPlayersIn: gameData.numberOfSubscribes === gameData.numPlayerToStart,
-      names: gameData.subscribesIdStrings,
-      numberOfSubscribes: gameData.numberOfSubscribes
+      names: gameData.subscribesList,
+      numberOfSubscribes: gameData.numberOfSubscribes,
+      winName: JSON.parse(auth.getUserInfo(gameData.finalWinner)).name,
+      lostName: JSON.parse(auth.getUserInfo(gameData.finalLost)).name
+    };
+  } else if (
+    gameData !== undefined &&
+    (gameData.finalLost === null || gameData.finalWinner === null)
+  ) {
+    return {
+      isAllPlayersIn: gameData.numberOfSubscribes === gameData.numPlayerToStart,
+      names: gameData.subscribesList,
+      numberOfSubscribes: gameData.numberOfSubscribes,
+      winner: null,
+      lost: null
     };
   } else {
-    return "false";
+    return null;
   }
 }
 
@@ -271,7 +288,7 @@ function getUsersRoomData(req) {
 //   const roomId = JSON.parse(getMyRoomId(req)).id;
 //   const gameData = gamesList[roomId];
 //   const indexPlayer = gameData.currentPlayerIndex;
-//   if (req.session.id === gameData.subscribesIdStrings[indexPlayer].id) {
+//   if (req.session.id === gameData.subscribesList[indexPlayer].id) {
 //     if (indexPlayer + 1 === JSON.parse(gameData.numPlayerToStart)) {
 //       gameData.currentPlayerIndex = 0;
 //     } else {
@@ -284,9 +301,9 @@ function moveToNextTurn(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
   const indexPlayer = gameData.currentPlayerIndex;
-  if (req.session.id === gameData.subscribesIdStrings[indexPlayer].id) {
+  if (req.session.id === gameData.subscribesList[indexPlayer].id) {
     if (indexPlayer + 1 === JSON.parse(gameData.numberOfSubscribes)) {
-      const nextPlayer1 = gameData.subscribesIdStrings[0];
+      const nextPlayer1 = gameData.subscribesList[0];
       gameData.currentPlayerIndex = 0;
       if (
         nextPlayer1.id === gameData.finalWinner ||
@@ -296,7 +313,7 @@ function moveToNextTurn(req, res, next) {
       }
     } else {
       const nextPlayer2 =
-        gameData.subscribesIdStrings[gameData.currentPlayerIndex + 1];
+        gameData.subscribesList[gameData.currentPlayerIndex + 1];
       if (
         nextPlayer2.id === gameData.finalWinner ||
         nextPlayer2.id === gameData.finalLost
@@ -322,7 +339,7 @@ function moveToNextTurn(req, res, next) {
 //   if (gameData !== undefined) {
 //     const indexPlayer = gameData.currentPlayerIndex;
 
-//     return req.session.id === gameData.subscribesIdStrings[indexPlayer].id;
+//     return req.session.id === gameData.subscribesList[indexPlayer].id;
 //   } else return false;
 // }
 
@@ -333,8 +350,7 @@ function isMyTurn(req) {
 
   if (gameData !== undefined) {
     const indexPlayer = gameData.currentPlayerIndex;
-    const currPlayer =
-      gameData.subscribesIdStrings[gameData.currentPlayerIndex];
+    const currPlayer = gameData.subscribesList[gameData.currentPlayerIndex];
     if (
       currPlayer.id === gameData.finalWinner ||
       currPlayer.id === gameData.finalLost
@@ -342,7 +358,7 @@ function isMyTurn(req) {
       return false;
     }
 
-    return req.session.id === gameData.subscribesIdStrings[indexPlayer].id;
+    return req.session.id === gameData.subscribesList[indexPlayer].id;
   }
   return false;
 }
@@ -352,7 +368,7 @@ function getCurrentPlayer(req) {
   const gameData = gamesList[roomId];
   if (gameData !== undefined) {
     const indexPlayer = gameData.currentPlayerIndex;
-    const currentPlayerId = gameData.subscribesIdStrings[indexPlayer].id;
+    const currentPlayerId = gameData.subscribesList[indexPlayer].id;
 
     return JSON.stringify(JSON.parse(auth.getUserInfo(currentPlayerId)).name);
   } else return JSON.stringify("");
@@ -380,13 +396,14 @@ function postStats(req, res, next) {
   const roomId = getMyRoomIdObj.id;
   const gameData = gamesList[roomId];
 
-  const myIndex = userRoomId[req.session.id].subscribesIdStringsIndex;
+  const myIndex = userRoomId[req.session.id].subscribesListIndex;
 
   const objToPost = JSON.parse(req.body);
 
-  gameData.subscribesIdStrings[myIndex].stats = objToPost;
+  //gameData.subscribesList[myIndex].stats = objToPost;
 
-  console.log(JSON.stringify(objToPost));
+  gameData.subscribesList[myIndex].stats = JSON.parse(req.body);
+
   if (objToPost.isCartEmpty) updateWinner(req, objToPost);
   else if (!objToPost.isCartEmpty && !objToPost.isMoveExist)
     updateLose(req, objToPost);
@@ -402,26 +419,26 @@ function postStats(req, res, next) {
   next();
 }
 
-function updateLose(req, objToPost) {
+function updateLose(req) {
   const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = getMyRoomIdObj.id;
   const gameData = gamesList[roomId];
-  const myIndex = userRoomId[req.session.id].subscribesIdStringsIndex;
+  const myIndex = userRoomId[req.session.id].subscribesListIndex;
 
   if (gameData.finalWinner !== null && gameData.secondPlaceWinner !== null) {
     gameData.finalLost = req.session.id;
   } else {
-    let isExist=false
+    let isExist = false;
     for (let i = 0; i < gameData.lostQueue.length; i++) {
       if (gameData.lostQueue[i].id === req.session.id) {
-        isExist=true;
+        isExist = true;
       }
     }
-    if(!isExist)
-    gameData.lostQueue.push({
-      id: req.session.id,
-      score: gameData.subscribesIdStrings[myIndex].stats.score
-    });
+    if (!isExist)
+      gameData.lostQueue.push({
+        id: req.session.id,
+        score: gameData.subscribesList[myIndex].stats.score
+      });
     gameData.numOfUsersDone++;
     gameData.lostQueue.sort((a, b) => b.score - a.score);
     console.log("lostQueue after sort:" + JSON.stringify(gameData.lostQueue));
@@ -455,8 +472,8 @@ function updateWinner(req, objToPost) {
     gameData.finalWinner = req.session.id;
     if (gameData.numberOfSubscribes === 2) {
       for (let i = 0; i < 2; i++) {
-        if (gameData.subscribesIdStrings[i].id !== gameData.finalWinner)
-          gameData.finalLost = gameData.subscribesIdStrings[i].id;
+        if (gameData.subscribesList[i].id !== gameData.finalWinner)
+          gameData.finalLost = gameData.subscribesList[i].id;
       }
       gameData.isGameDone = true;
     }
@@ -465,10 +482,10 @@ function updateWinner(req, objToPost) {
 
     for (let i = 0; i < gameData.numberOfSubscribes; i++) {
       if (
-        gameData.subscribesIdStrings[i].id !== gameData.finalWinner &&
-        gameData.subscribesIdStrings[i].id !== gameData.secondPlaceWinner
+        gameData.subscribesList[i].id !== gameData.finalWinner &&
+        gameData.subscribesList[i].id !== gameData.secondPlaceWinner
       )
-        gameData.finalLost = gameData.subscribesIdStrings[i].id;
+        gameData.finalLost = gameData.subscribesList[i].id;
     }
     gameData.isGameDone = true;
   }

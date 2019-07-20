@@ -6,6 +6,7 @@ import UsersList from "./UsersList.jsx";
 import GamesList from "./GamesList.jsx";
 import NewGameModal from "./NewGameModal.jsx";
 import Game from "./Game.jsx";
+import GamesSummary from "./GameSummary.jsx";
 import "../style/GameStyle.css";
 
 export default class BaseContainer extends React.Component {
@@ -15,6 +16,11 @@ export default class BaseContainer extends React.Component {
       showLogin: true,
       showLobby: false,
       showGame: false,
+      showGameSummary: true,
+      usersRoomData: null,
+      currentTime: { minutes: 0, seconds: 0 },
+      winName:null,
+      lostName:null,
       currentUser: {
         //name: ''
       },
@@ -32,10 +38,13 @@ export default class BaseContainer extends React.Component {
     //  this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
     //  this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
     this.renderGame = this.renderGame.bind(this);
-    this.removeAndExitToLobbyHandler = this.removeAndExitToLobbyHandler.bind(this);
+    this.removeAndExitToLobbyHandler = this.removeAndExitToLobbyHandler.bind(
+      this
+    );
     this.handleIsCurrUserInRoom = this.handleIsCurrUserInRoom.bind(this);
     this.handleSucceedJoinToRoom = this.handleSucceedJoinToRoom.bind(this);
     this.exitToLobbyHandler = this.exitToLobbyHandler.bind(this);
+    this.handleGameDone = this.handleGameDone.bind(this);
     this._isMounted = false;
   }
 
@@ -50,10 +59,12 @@ export default class BaseContainer extends React.Component {
       );
     } else if (this.state.showLobby) {
       return this.renderLobby();
-    } else {
+    } else if (this.state.showGame && !this.state.showGameSummary) {
       //render Game
       return this.renderGame();
-    }
+    } else if (!this.state.showGame && this.state.showGameSummary)
+      return this.renderGameSummary();
+    else return null;
   }
 
   handleSucceededLogin() {
@@ -77,9 +88,11 @@ export default class BaseContainer extends React.Component {
         name={this.state.currentUser.name}
         handleIsCurrUserInRoom={this.handleIsCurrUserInRoom}
         currentRoomName={this.state.currentRoomName}
+        sendUsersRoomDataToHome={this.handleGameDone}
       />
     );
   }
+
   renderLobby() {
     return (
       <div key="home-base-container-lobby" className="home-base-container">
@@ -123,6 +136,10 @@ export default class BaseContainer extends React.Component {
         </div>
       </div>
     );
+  }
+
+  renderGameSummary() {
+    return <GamesSummary usersRoomData={this.state.usersRoomData} currentTime={this.state.currentTime} winName={this.state.winName} lostName={this.state.lostName}/>;
   }
 
   getUserName() {
@@ -186,7 +203,8 @@ export default class BaseContainer extends React.Component {
         this.setState(() => ({
           showGame: false,
           showLobby: true,
-          showLogin: false
+          showLogin: false,
+          showGameSummary: false
         }));
       }
     );
@@ -201,7 +219,11 @@ export default class BaseContainer extends React.Component {
             response
           );
         }
-        this.setState(() => ({ currentUser: { name: "" }, showLogin: true }));
+        this.setState(() => ({
+          currentUser: { name: "" },
+          showLogin: true,
+          showGameSummary: false
+        }));
       }
     );
   }
@@ -216,10 +238,25 @@ export default class BaseContainer extends React.Component {
     //   //this.isCurrUserInRoom();
   }
 
+  handleGameDone(currTime, usersRoomData, win, lost) {
+    this.setState(() => ({
+      currentRoomName: this.state.currentRoomName,
+      showLobby: false,
+      showGame: false,
+      showGameSummary: true,
+      usersRoomData: usersRoomData,
+      usersStats: usersRoomData.names,
+      currentTime: currTime,
+      winName: win,
+      lostName: lost
+    }));
+  }
+
   handleSucceedCreateNewRoom(currentRoomName) {
     this.setState(() => ({
       currentRoomName: currentRoomName,
-      showLobby: true
+      showLobby: true,
+      showGameSummary: false
     }));
     //this.isCurrUserInRoom();
   }
@@ -227,7 +264,9 @@ export default class BaseContainer extends React.Component {
   handleSucceedJoinToRoom(currentRoomName) {
     this.setState(() => ({
       currentRoomName: currentRoomName,
-      showLobby: false
+      showLobby: false,
+      showGame: true,
+      showGameSummary: false
     }));
     //this.isCurrUserInRoom();
   }

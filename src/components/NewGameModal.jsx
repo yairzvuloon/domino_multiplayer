@@ -9,8 +9,8 @@ class GameData {
     this.numPlayerToStart = i_NumPlayerToStart;
     this.numberOfSubscribes = 0;
     this.isGameStart = false;
-    this.subscribesIdStrings = new Array(i_NumPlayerToStart);
-    this.subscribesIdStrings[0] = i_HostId;
+    this.subscribesList = new Array(i_NumPlayerToStart);
+    this.subscribesList[0] = i_HostId;
     this.hostName = i_HostName;
   }
 }
