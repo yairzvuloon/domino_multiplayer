@@ -5,33 +5,33 @@ const chat = require("./chat");
 const gamesList = {};
 const userRoomId = {};
 
-function gameAuthentication(req, res, next) {
-  if (gamesList[req.session.id] === undefined) {
-    res.sendStatus(401).send("you are not register to looby");
-  } else {
-    next();
-  }
-}
+
+// function gameAuthentication(req, res, next) {
+//   if (gamesList[req.session.id] === undefined) {
+//     res.sendStatus(401).send("you are not register to looby");
+//   } else {
+//     next();
+//   }
+// }
 
 function addGameToGamesList(req, res, next) {
-  if (gamesList[req.session.id] !== undefined) {
-    res.status(403).send("unable to create 2 room, for one host.");
+  
+  const gameNameOut=JSON.parse(req.body).gameName;
+ 
+  if (gamesList[gameNameOut] !== undefined) {
+    res.status(403).send("game name already exist!");
   } else {
-    for (sessionId in gamesList) {
-      const gameData = gamesList[sessionId];
-      if (gameData.gameName === JSON.parse(req.body).gameName) {
-        res.status(403).send("game name already exist!");
+    for (gameName in gamesList) {
+      const gameData = gamesList[gameName];
+      if (gameData.hostId === req.session.id) {
+        res.status(403).send("unable to create 2 room, for one host.");
         return;
       }
     }
 
     const obj = JSON.parse(req.body);
-    obj.id = req.session.id;
-    // obj.subscribesList[0] = req.session.id;
-    // userRoomId[req.session.id] = {
-    //   id: req.session.id,
-    //   subscribesListIndex: 0
-    // };
+    obj.id = obj.gameName;
+    obj.hostId= req.session.id;
     obj.DominoStackLogic = new Manager.DominoStack();
     obj.validLocationsArray = createEmptyValidLocations();
     obj.boardMap = Manager.setInitialBoard(57);
@@ -40,13 +40,12 @@ function addGameToGamesList(req, res, next) {
     obj.numberOfSubscribes = 0;
     obj.lostQueue = [];
     obj.winQueue = [];
-
     obj.finalWinner = null;
     obj.secondPlaceWinner = null;
     obj.finalLost = null;
     obj.isGameDone = false;
     obj.numOfUsersDone = 0;
-    gamesList[req.session.id] = obj;
+    gamesList[gameNameOut] = obj;
     next();
   }
 }
@@ -140,7 +139,10 @@ function getMyRoomData(req) {
 }
 
 function isHost(req) {
-  return JSON.stringify(gamesList[req.session.id] !== undefined);
+  const roomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = roomIdObj.id;
+ 
+  return JSON.stringify(gamesList[roomId].hostId === req.session.id);
 }
 
 function isUserInRoom(req, res, next) {
@@ -151,7 +153,7 @@ function isUserInRoom(req, res, next) {
 }
 
 function addUserToGame(req, res, next) {
-  const roomID = JSON.parse(req.body).roomId;
+  const roomID = JSON.parse(req.body).gameName;
   const name = JSON.parse(req.body).name;
 
   const gameData = gamesList[roomID];
@@ -503,7 +505,7 @@ function amIWinOrLost(req, res, next) {
 }
 
 module.exports = {
-  gameAuthentication,
+  //gameAuthentication,
   addGameToGamesList,
   getGamesList,
   removeGameFromGamesList,

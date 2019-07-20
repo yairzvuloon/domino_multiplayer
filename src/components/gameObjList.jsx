@@ -46,7 +46,11 @@ export default class GameObjList extends React.Component {
   addCurrUserToThisRoom() {
     fetch("/games/addUser", {
       method: "POST",
-      body: JSON.stringify({roomId:this.state.roomId,name:this.props.name}),
+      body: JSON.stringify({
+        roomId: this.state.roomId,
+        gameName: this.state.gameName,
+        name: this.props.name
+      }),
       credentials: "include"
     }).then(response => {
       if (!response.ok) {
