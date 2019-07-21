@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 
 export default class GameObjList extends React.Component {
   constructor(props) {
