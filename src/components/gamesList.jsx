@@ -1,12 +1,10 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import GameObjList from "./GameObjList.jsx";
 
 export default class GamesList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      //usersList: { 12: "Jack", 3: "yair" }
       gamesList: {}
     };
     this.getGamesList = this.getGamesList.bind(this);
@@ -16,14 +14,13 @@ export default class GamesList extends React.Component {
 
   componentDidMount() {
     this._isMounted = true;
-    //if (this.props.isUserConnected&&this._isMounted === true) this.getGamesList();
     if (this._isMounted === true) this.getGamesList();
   }
 
   componentWillUnmount() {
     this._isMounted = false;
     if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
+      clearTimeout(this.timeoutId);
     }
   }
 
@@ -31,22 +28,27 @@ export default class GamesList extends React.Component {
     this.getGamesList();
   }
   getGamesList() {
-    const interval = 1000; //TODO: change to 200
-    return fetch("/games/allGames", { method: "GET", credentials: "include" })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        this.timeoutId = setTimeout(this.getGamesListWrapper, interval);
+    const interval = 1000;
+    if (this.props.fetchToggle) {
+      return fetch("/games/allGames", { method: "GET", credentials: "include" })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          this.timeoutId = setTimeout(this.getGamesListWrapper, interval);
 
-        return response.json();
-      })
-      .then(gamesList => {
-        if (this._isMounted) this.setState(() => ({ gamesList:JSON.parse(gamesList) }));
-      })
-      .catch(err => {
-        throw err;
-      });
+          return response.json();
+        })
+        .then(gamesList => {
+          if (this._isMounted)
+            this.setState(() => ({ gamesList: JSON.parse(gamesList) }));
+        })
+        .catch(err => {
+          throw err;
+        });
+    } else {
+      this.timeoutId = setTimeout(this.getGamesListWrapper, interval);
+    }
   }
 
   render() {
@@ -56,12 +58,11 @@ export default class GamesList extends React.Component {
         <ul>
           {Object.keys(this.state.gamesList).map((id, index) => (
             <GameObjList
-              key={"key"+index}
+              key={"key" + index}
               handleJoinToGame={this.props.handleJoinToGame}
               data={this.state.gamesList[id]}
               name={this.props.name}
             />
-            //<li key={id}>{JSON.parse(this.state.gamesList[id]).gameName}</li>
           ))}
         </ul>
       </div>

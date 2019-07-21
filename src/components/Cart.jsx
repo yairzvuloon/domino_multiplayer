@@ -2,7 +2,7 @@ import React from "react";
 import Piece, { EmptyPiece } from "./Piece.jsx";
 
 const Cart = props => {
-  const {cart} = props;
+  const { cart } = props;
   return (
     <table id="userCart">
       <tbody>
@@ -10,22 +10,24 @@ const Cart = props => {
           {cart.map((dominoPiece, j) => {
             const { valid, side1, side2 } = dominoPiece;
             let ret = null;
-            if (valid===undefined) {
+            if (valid === undefined) {
               ret = (
-                <td key={j} onClick={() => props.onClick(j,dominoPiece)}>
+                <td key={j} onClick={() => props.onClick(j, dominoPiece)}>
                   <Piece side1={side1} side2={side2} isLaying={false} />
                 </td>
               );
-            }
-            else if(valid)
-            {
+            } else if (valid) {
               ret = (
-                <td key={j} onClick={() => props.onClick(j,dominoPiece)}>
-                  <Piece valid={true} side1={side1} side2={side2} isLaying={false} />
+                <td key={j} onClick={() => props.onClick(j, dominoPiece)}>
+                  <Piece
+                    valid={true}
+                    side1={side1}
+                    side2={side2}
+                    isLaying={false}
+                  />
                 </td>
-              ); 
-            }
-             else {
+              );
+            } else {
               ret = (
                 <td key={j}>
                   <EmptyPiece />

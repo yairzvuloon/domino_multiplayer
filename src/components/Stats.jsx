@@ -1,12 +1,7 @@
 import React from "react";
 
 const Stats = props => {
-  const {
-    turn,
-    currentScore,
-   average,
-    withdrawals,
-  } = props;
+  const { turn, currentScore, average, withdrawals } = props;
 
   return (
     <div>

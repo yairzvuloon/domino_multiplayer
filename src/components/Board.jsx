@@ -20,13 +20,13 @@ const BoardRow = props => {
         <td key={j}>
           <EmptyPiece />
         </td>
-      ); 
-      else
-        ret = (
-          <td key={j} onClick={() => props.onClick(indexRow, j)}>
-            <ValidPiece/>
-          </td>
-        );
+      );
+    else
+      ret = (
+        <td key={j} onClick={() => props.onClick(indexRow, j)}>
+          <ValidPiece />
+        </td>
+      );
     return ret;
   });
 };

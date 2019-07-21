@@ -4,7 +4,7 @@ import { secondsToTime } from "../utilities/Manager";
 class Timer extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { time: {minutes: 0, seconds: 0}, seconds: 0 };
+    this.state = { time: { minutes: 0, seconds: 0 }, seconds: 0 };
     this.timer = 0;
     this.startTimer = this.startTimer.bind(this);
     this.resetTimer = this.resetTimer.bind(this);
@@ -12,7 +12,6 @@ class Timer extends React.Component {
     this.countUp = this.countUp.bind(this);
     this.displaySpecificTime = this.displaySpecificTime.bind(this);
     this._isMounted = false;
-   //this.startTimer({ m: 0, s: 0 });
     this.transferDataToHome = props.sendCurrentTime;
   }
 
@@ -24,7 +23,7 @@ class Timer extends React.Component {
     this.stopInterval();
     this.timer = 0;
     this.startTimer({ minutes: 0, seconds: 0 });
-    this.setState(() => ({ time: {minutes: 0, seconds: 0}, seconds: 0 }));
+    this.setState(() => ({ time: { minutes: 0, seconds: 0 }, seconds: 0 }));
   }
 
   startTimer(initialTime) {
@@ -42,20 +41,18 @@ class Timer extends React.Component {
   }
 
   countUp() {
-   if(this.props.isGameStarted&&!this.props.isGameDone)
-   {
-    this.setState(prevState => {
-      return {
-        time: Manager.secondsToTime(prevState.seconds),
-        seconds: prevState.seconds + 1
-      };
-    });
-  }
-  this.timeoutId=setTimeout(this.countUp,1000);
+    if (this.props.isGameStarted && !this.props.isGameDone) {
+      this.setState(prevState => {
+        return {
+          time: Manager.secondsToTime(prevState.seconds),
+          seconds: prevState.seconds + 1
+        };
+      });
+    }
+    this.timeoutId = setTimeout(this.countUp, 1000);
   }
 
   componentDidUpdate(prevProps) {
-  
     if (
       prevProps.isResetNeeded !== this.props.isResetNeeded &&
       this.props.isResetNeeded
@@ -71,24 +68,20 @@ class Timer extends React.Component {
       }
     }
   }
-componentDidMount(){
-  this._isMounted = true;
+  componentDidMount() {
+    this._isMounted = true;
 
-  if (this._isMounted) {
-    this.startTimer({ minutes: 0, seconds: 0 });
+    if (this._isMounted) {
+      this.startTimer({ minutes: 0, seconds: 0 });
+    }
   }
-  
-}
 
-componentWillUnmount()
-{
-  this._isMounted = false;
-  if(this.timeoutId)
-  {
-    clearTimeout(this.timeoutId);
+  componentWillUnmount() {
+    this._isMounted = false;
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
   }
-}
-
 
   render() {
     this.transferDataToHome(this.state.time.minutes, this.state.time.seconds);

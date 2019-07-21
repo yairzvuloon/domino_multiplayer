@@ -1,5 +1,3 @@
-const games = require("./games");
-
 const chatContentList = {};
 
 function getChatRoomContent(myRoomId) {

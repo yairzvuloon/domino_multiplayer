@@ -7,7 +7,6 @@ const userManagement = express.Router();
 
 userManagement.get("/", auth.userAuthentication, (req, res) => {
   const user = auth.getUserInfo(req.session.id);
-  //res.json({ id: req.session.id, name: user.name, roomId:user.roomId  });
   res.json(user)
 });
 
@@ -19,28 +18,20 @@ userManagement.post("/addUser", auth.addUserToAuthList, (req, res) => {
   res.sendStatus(200);
 });
 
-// userManagement.post("/addRoom", (req, res, next) => {
-//   auth.addRoomToUser(req, res, next);
-// });
-
 userManagement.get("/logout", [
   (req, res, next) => {
     const userInfo = auth.getUserInfo(req.session.id);
-    //chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
-  //games.removeUserFromGame,
-  //games.removeGameFromGamesList,
   auth.removeUserFromAuthList,
   (req, res) => {
     res.sendStatus(200);
   }
 ]);
 
-userManagement.get("/removeGame", [
+userManagement.post("/removeGame", [
   (req, res, next) => {
     const userInfo = auth.getUserInfo(req.session.id);
-    //chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
   games.removeGameFromGamesList,
@@ -52,7 +43,6 @@ userManagement.get("/removeGame", [
 userManagement.get("/exit", [
   (req, res, next) => {
     const userInfo = auth.getUserInfo(req.session.id);
-    //chatManagement.appendUserLogoutMessage(userInfo);
     next();
   },
   games.removeUserFromGame,
@@ -61,5 +51,14 @@ userManagement.get("/exit", [
   }
 ]);
 
-
+userManagement.get("/winExit", [
+  (req, res, next) => {
+    const userInfo = auth.getUserInfo(req.session.id);
+    next();
+  },
+  games.winExit,
+  (req, res) => {
+    res.sendStatus(200);
+  }
+]);
 module.exports = userManagement;

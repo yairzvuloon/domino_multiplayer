@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 
 const Piece = props => {
   const { valid, side1, side2, isLaying } = props;
@@ -18,7 +17,6 @@ const Piece = props => {
 
     return deg;
   };
-  //the format of piece image name is "p{minNumberSide}_{maxNumberSide}"
   const getImageName = (side1, side2) => {
     return "p" + Math.min(side1, side2) + "_" + Math.max(side1, side2);
   };
@@ -87,20 +85,3 @@ const validStyle = {
   height: size,
   backgroundColor: "green"
 };
-
-// const style = {
-//   image: {
-//     width: size,
-//     height: size
-//   },
-//   container: {
-//     width: size,
-//     height: size,
-//     backgroundColor: "white"
-//   },
-//   validPiece: {
-//     width: size,
-//     height: size,
-//     backgroundColor: "green"
-//   }
-// };

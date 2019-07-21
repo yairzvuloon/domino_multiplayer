@@ -41,7 +41,6 @@ export default class NewGameModal extends React.Component {
           <label className="newGame-input-label" htmlFor="userName">
             num of players:{" "}
           </label>
-          {/*<input className="newGame-input" name="numOfPlayers" />*/}
           <p>Amount of members:</p>
           <label>
             {" "}
@@ -108,17 +107,4 @@ export default class NewGameModal extends React.Component {
       .then(() => this.props.createNewGameSuccessHandler(gameName));
     return false;
   }
-
-  getGameRoom() {
-    alert("new room opened");
-  }
-
-  // handleSucceedCreateNewRoom() {
-  //   this.setState(() => ({ showLobby: false }), this.getGameRoom);
-  // }
-
-  // createRoomErrorHandler() {
-  //   console.error("create new room failed");
-  //   this.setState(() => ({ showLobby: true }));
-  // }
 }

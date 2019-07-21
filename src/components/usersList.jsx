@@ -5,7 +5,6 @@ export default class UsersList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      //usersList: {  2: "Jack", 3: "yair" }
       usersList: {}
     };
     this.getUserList = this.getUserList.bind(this);
@@ -16,7 +15,6 @@ export default class UsersList extends React.Component {
 
   componentDidMount() {
     this._isMounted = true;
-    //if (this.props.isUserConnected&&this._isMounted === true) this.getUserList();
 
     if (this._isMounted === true) this.getUserList();
   }
@@ -34,23 +32,27 @@ export default class UsersList extends React.Component {
   }
 
   getUserList() {
-    const interval = 1000; //TODO: change to 200
-    return fetch("/users/allUsers", { method: "GET", credentials: "include" })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
+    const interval = 1000;
 
-        this.timeoutId = setTimeout(this.getUserListWrapper, interval);
-        return response.json();
-      })
-      .then(usersList => {
-       if(this._isMounted)
-        this.setState(() => ({ usersList }));
-      })
-      .catch(err => {
-        throw err;
-      });
+    if (this.props.fetchToggle) {
+      return fetch("/users/allUsers", { method: "GET", credentials: "include" })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+
+          this.timeoutId = setTimeout(this.getUserListWrapper, interval);
+          return response.json();
+        })
+        .then(usersList => {
+          if (this._isMounted) this.setState(() => ({ usersList }));
+        })
+        .catch(err => {
+          throw err;
+        });
+    } else {
+      this.timeoutId = setTimeout(this.getUserListWrapper, interval);
+    }
   }
 
   render() {

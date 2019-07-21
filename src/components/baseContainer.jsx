@@ -19,14 +19,12 @@ export default class BaseContainer extends React.Component {
       showGameSummary: true,
       usersRoomData: null,
       currentTime: { minutes: 0, seconds: 0 },
-      winName:null,
-      lostName:null,
-      currentUser: {
-        //name: ''
-      },
+      winName: null,
+      lostName: null,
+      currentUser: {},
       currentRoomName: null
     };
-
+    this._isMounted = false;
     this.handleSucceededLogin = this.handleSucceededLogin.bind(this);
     this.handleLoginError = this.handleLoginError.bind(this);
     this.handleSucceedCreateNewRoom = this.handleSucceedCreateNewRoom.bind(
@@ -35,8 +33,6 @@ export default class BaseContainer extends React.Component {
     this.handleCreateRoomError = this.handleCreateRoomError.bind(this);
     this.fetchUserInfo = this.fetchUserInfo.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
-    //  this.isCurrUserInRoom = this.isCurrUserInRoom.bind(this);
-    //  this.isCurrUserInRoomWrapper = this.isCurrUserInRoomWrapper.bind(this);
     this.renderGame = this.renderGame.bind(this);
     this.removeAndExitToLobbyHandler = this.removeAndExitToLobbyHandler.bind(
       this
@@ -44,6 +40,8 @@ export default class BaseContainer extends React.Component {
     this.handleIsCurrUserInRoom = this.handleIsCurrUserInRoom.bind(this);
     this.handleSucceedJoinToRoom = this.handleSucceedJoinToRoom.bind(this);
     this.exitToLobbyHandler = this.exitToLobbyHandler.bind(this);
+    this.handleGoToLobbyButton = this.handleGoToLobbyButton.bind(this);
+    this.winExitToLobbyHandler = this.winExitToLobbyHandler.bind(this);
     this.handleGameDone = this.handleGameDone.bind(this);
     this._isMounted = false;
   }
@@ -60,7 +58,6 @@ export default class BaseContainer extends React.Component {
     } else if (this.state.showLobby) {
       return this.renderLobby();
     } else if (this.state.showGame && !this.state.showGameSummary) {
-      //render Game
       return this.renderGame();
     } else if (!this.state.showGame && this.state.showGameSummary)
       return this.renderGameSummary();
@@ -72,7 +69,6 @@ export default class BaseContainer extends React.Component {
       () => ({ showLobby: true, showLogin: false }),
       this.getUserName
     );
-    //this.getUserName();
   }
 
   handleLoginError() {
@@ -85,10 +81,12 @@ export default class BaseContainer extends React.Component {
       <Game
         removeAndExitHandler={this.removeAndExitToLobbyHandler}
         exitToLobbyHandler={this.exitToLobbyHandler}
+        winExitToLobbyHandler={this.winExitToLobbyHandler}
         name={this.state.currentUser.name}
         handleIsCurrUserInRoom={this.handleIsCurrUserInRoom}
         currentRoomName={this.state.currentRoomName}
         sendUsersRoomDataToHome={this.handleGameDone}
+        fetchToggle={!this.state.showLogin}
       />
     );
   }
@@ -127,11 +125,15 @@ export default class BaseContainer extends React.Component {
               key="GamesList-lobby"
               handleJoinToGame={this.handleSucceedJoinToRoom}
               name={this.state.currentUser.name}
+              fetchToggle={!this.state.showLogin}
             />
           </div>
 
           <div key="users-list-area-lobby" className="users-list-area">
-            <UsersList key="UsersList-lobby" />
+            <UsersList
+              fetchToggle={!this.state.showLogin}
+              key="UsersList-lobby"
+            />
           </div>
         </div>
       </div>
@@ -139,13 +141,22 @@ export default class BaseContainer extends React.Component {
   }
 
   renderGameSummary() {
-    return <GamesSummary usersRoomData={this.state.usersRoomData} currentTime={this.state.currentTime} winName={this.state.winName} lostName={this.state.lostName}/>;
+    return (
+      <GamesSummary
+        handleGoToLobbyButton={this.handleGoToLobbyButton}
+        usersRoomData={this.state.usersRoomData}
+        currentTime={this.state.currentTime}
+        winName={this.state.winName}
+        lostName={this.state.lostName}
+        currentRoomName={this.state.currentRoomName}
+        createNewGameSuccessHandler={this.handleSucceedCreateNewRoom}
+      />
+    );
   }
 
   getUserName() {
     this.fetchUserInfo()
       .then(userInfo => {
-        //console.log("getUserName" + userInfo);
         this.setState(() => ({
           currentUser: JSON.parse(userInfo),
           showLobby: true,
@@ -154,10 +165,9 @@ export default class BaseContainer extends React.Component {
       })
       .catch(err => {
         if (err.status === 401) {
-          // incase we're getting 'unauthorized' as response
           this.setState(() => ({ showLogin: true }));
         } else {
-          throw err; // in case we're getting an error
+          throw err;
         }
       });
   }
@@ -174,7 +184,23 @@ export default class BaseContainer extends React.Component {
   }
 
   removeAndExitToLobbyHandler() {
-    fetch("/users/removeGame", { method: "GET", credentials: "include" }).then(
+    fetch("/users/removeGame", {
+      method: "POST",
+      credentials: "include"
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response;
+      })
+      .then(() => {
+        this.handleGoToLobbyButton();
+      });
+  }
+
+  exitToLobbyHandler() {
+    fetch("/users/exit", { method: "GET", credentials: "include" }).then(
       response => {
         if (!response.ok) {
           console.log(
@@ -182,17 +208,23 @@ export default class BaseContainer extends React.Component {
             response
           );
         }
-        this.setState(() => ({
-          showGame: false,
-          showLobby: true,
-          showLogin: false
-        }));
+        this.handleGoToLobbyButton();
       }
     );
   }
 
-  exitToLobbyHandler() {
-    fetch("/users/exit", { method: "GET", credentials: "include" }).then(
+  handleGoToLobbyButton(currentRoomName = null) {
+    this.setState(() => ({
+      currentRoomName: currentRoomName,
+      showGame: false,
+      showLobby: true,
+      showLogin: false,
+      showGameSummary: false
+    }));
+  }
+
+  winExitToLobbyHandler() {
+    fetch("/users/winExit", { method: "GET", credentials: "include" }).then(
       response => {
         if (!response.ok) {
           console.log(
@@ -228,16 +260,6 @@ export default class BaseContainer extends React.Component {
     );
   }
 
-  componentDidMount() {
-    //this._isMounted = true;
-    //  if (
-    // this.state.currentUser.name !== undefined &&
-    //this.state.currentUser.name !== "" &&
-    //this._isMounted === true
-    //)
-    //   //this.isCurrUserInRoom();
-  }
-
   handleGameDone(currTime, usersRoomData, win, lost) {
     this.setState(() => ({
       currentRoomName: this.state.currentRoomName,
@@ -258,7 +280,6 @@ export default class BaseContainer extends React.Component {
       showLobby: true,
       showGameSummary: false
     }));
-    //this.isCurrUserInRoom();
   }
 
   handleSucceedJoinToRoom(currentRoomName) {
@@ -268,41 +289,7 @@ export default class BaseContainer extends React.Component {
       showGame: true,
       showGameSummary: false
     }));
-    //this.isCurrUserInRoom();
   }
-
-  // isCurrUserInRoomWrapper() {
-  //   this.isCurrUserInRoom();
-  // }
-
-  // isCurrUserInRoom() {
-  //   const interval = 1000; //TODO: change to 200
-  //   if (
-  //     this.state.currentUser !== undefined &&
-  //     this.state.currentUser.name !== ""
-  //   ) {
-  //     return fetch("/games/myRoomId", { method: "GET", credentials: "include" })
-  //       .then(response => {
-  //         if (!response.ok) {
-  //           throw response;
-  //         }
-  //         this.timeoutId = setTimeout(this.isCurrUserInRoomWrapper, interval);
-  //         return response.json();
-  //       })
-  //       .then(currRoomId => {
-  //         if (
-  //           this._isMounted &&
-  //           this.state.showLobby === false &&
-  //           JSON.parse(currRoomId).id === ""
-  //         )
-  //           this.setState(prevState => ({ showGame:false, showLobby: true }));
-  //         else return false;
-  //       })
-  //       .catch(err => {
-  //         throw err;
-  //       });
-  //   }
-  // }
 
   handleIsCurrUserInRoom() {
     this.setState(() => ({ showGame: false, showLobby: true }));

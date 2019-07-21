@@ -46,25 +46,24 @@ export default class ConversionArea extends React.Component {
   getChatContentWrapper() {
     this.getChatContent();
   }
-  
+
   getChatContent() {
     const interval = 1000; //TODO: change to 200
-   if(this.props.isUserConnected) 
-   {
-    return fetch("/chat", { method: "GET", credentials: "include" })
-      .then(response => {
-        if (!response.ok) {
-          throw response;
-        }
-        this.timeoutId = setTimeout(this.getChatContentWrapper, interval);
-        return response.json();
-      })
-      .then(content => {
-        if (this._isMounted) this.setState(() => ({ content: content }));
-      })
-      .catch(err => {
-        throw err;
-      });
+    if (this.props.isUserConnected) {
+      return fetch("/chat", { method: "GET", credentials: "include" })
+        .then(response => {
+          if (!response.ok) {
+            throw response;
+          }
+          this.timeoutId = setTimeout(this.getChatContentWrapper, interval);
+          return response.json();
+        })
+        .then(content => {
+          if (this._isMounted) this.setState(() => ({ content: content }));
+        })
+        .catch(err => {
+          throw err;
+        });
     }
   }
 }

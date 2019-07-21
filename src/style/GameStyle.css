@@ -1,6 +1,4 @@
-
-#gameAndDataFlex
-{
+#gameAndDataFlex {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -11,7 +9,7 @@
   margin: auto;
 }
 
-.roomText{
+.roomText {
   width: 29vh;
   height: 3vh;
 }
@@ -27,13 +25,10 @@
   height: 81vh;
 }
 
-
 #boardFrame {
   width: 59vw;
   height: 23vw;
   overflow: scroll;
-  /*margin-left: 100%;
-margin-right: 100%;*/
 }
 #cartFrame {
   max-width: 50vw;

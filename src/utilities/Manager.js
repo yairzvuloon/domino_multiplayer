@@ -1,10 +1,9 @@
 class DominoStack {
   constructor() {
-    this.piecesAmount = 14;
+    this.piecesAmount = 28;
     this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
     this.indexesCardsBoxIndex = this.piecesAmount - 1;
     this.cardsArray = this.createCardsArray();
-    //because of the initial state of stack
     this.numberOfDrawnFromStack = -7;
     this.getNumOfWithdrawals = this.getNumOfWithdrawals.bind(this);
     this.getNumOfPieces = this.getNumOfPieces.bind(this);
@@ -71,7 +70,6 @@ class DominoStack {
     this.indexesCardsBox = this.createShuffledArray(this.piecesAmount);
     this.indexesCardsBoxIndex = this.piecesAmount - 1;
     this.cardsArray = this.createCardsArray();
-    //because of the initial state of stack
     this.numberOfDrawnFromStack = -7;
   }
 }
@@ -94,7 +92,19 @@ class StatsObj {
   }
 }
 
-////////client
+class GameData {
+  constructor(i_HostName, i_HostId, i_GameName, i_NumPlayerToStart) {
+    this.id = i_HostId;
+    this.gameName = i_GameName;
+    this.numPlayerToStart = i_NumPlayerToStart;
+    this.numberOfSubscribes = 0;
+    this.isGameStart = false;
+    this.subscribesList = new Array(i_NumPlayerToStart);
+    this.subscribesList[0] = i_HostId;
+    this.hostName = i_HostName;
+  }
+}
+
 const createEmptyBoard = size => {
   let matrix = new Array(size);
   for (let i = 0; i < size; i++) {
@@ -105,23 +115,13 @@ const createEmptyBoard = size => {
   }
   return matrix;
 };
-////////
-////////client
+
 const setInitialBoard = size => {
   let board = createEmptyBoard(size);
   let mid = Math.floor(size / 2);
   board[mid][mid].valid = true;
   return board;
 };
-///////
-
-// export const setInitialCart = () => {
-//   let cart = new Array(7);
-//   for (let i = 0; i < 7; i++) {
-//     cart[i] = DominoStackLogic.getCard();
-//   }
-//   return cart;
-// };
 
 const secondsToTime = secs => {
   let divisor_for_minutes = secs % (60 * 60);
@@ -163,7 +163,6 @@ const createEmptyValidLocations = () => {
   return matrix;
 };
 
-////////client
 const createCopyRow = (matrix, i_Row) => {
   let size = 0;
   if (matrix[i_Row]) size = matrix[i_Row].length;
@@ -174,7 +173,6 @@ const createCopyRow = (matrix, i_Row) => {
   }
   return array;
 };
-/////
 class NeighborsObj {
   constructor(up, down, left, right) {
     this.up = up;
@@ -183,14 +181,13 @@ class NeighborsObj {
     this.right = right;
   }
 }
-//export const DominoStackLogic = new DominoStack();
 module.exports = {
   Card,
   NeighborsObj,
   StatsObj,
   setInitialBoard,
-  //setInitialCart,
   DominoStack,
+  GameData,
   secondsToTime,
   removeRowColElementFromArray,
   createCopyRow,

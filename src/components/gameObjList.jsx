@@ -59,7 +59,6 @@ export default class GameObjList extends React.Component {
             errMessage: "Unable to add the user, to the room."
           }));
         }
-        //     this.props.createNewGameErrorHandler();
       }
     });
   }

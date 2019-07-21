@@ -3,11 +3,6 @@ const games = require("./games");
 const auth = require("./auth");
 const gamesListManagement = express.Router();
 
-// gamesListManagement.get("/", games.gameAuthentication, (req, res) => {
-//   const game = games.getGameInfo(req.session.id);
-//   res.json(game);
-// });
-
 gamesListManagement.post("/addGame", games.addGameToGamesList, (req, res) => {
   res.sendStatus(200);
 });
@@ -121,14 +116,10 @@ gamesListManagement.get(
   }
 );
 
-gamesListManagement.get(
-  "/isGameDone",
-  auth.userAuthentication,
-  (req, res) => {
-    let isGameDone = games.isGameDone(req);
-    res.status(200).json(isGameDone);
-  }
-);
+gamesListManagement.get("/isGameDone", auth.userAuthentication, (req, res) => {
+  let isGameDone = games.isGameDone(req);
+  res.status(200).json(isGameDone);
+});
 
 gamesListManagement.get(
   "/amIWinOrLost",
@@ -139,4 +130,11 @@ gamesListManagement.get(
   }
 );
 
+gamesListManagement.post(
+  "/removeAllUsersAndResetGame",
+  games.removeAllUsersAndResetGame,
+  (req, res) => {
+    res.sendStatus(200);
+  }
+);
 module.exports = gamesListManagement;

@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import ConversionArea from "./ConversionArea.jsx";
 import ChatInput from "./ChatInput.jsx";
 
@@ -9,14 +8,14 @@ export default class ChatContainer extends React.Component {
   }
 
   render() {
-    return(
-    <div key="chat-container-in-chat-container" className="chat-container">
-      <ConversionArea
-        isUserConnected={this.props.isUserConnected}
-        key="ConversionArea-chat-container"
-      />
-      <ChatInput key="ChatInput-chat-container" />
-    </div>
+    return (
+      <div key="chat-container-in-chat-container" className="chat-container">
+        <ConversionArea
+          isUserConnected={this.props.isUserConnected}
+          key="ConversionArea-chat-container"
+        />
+        <ChatInput key="ChatInput-chat-container" />
+      </div>
     );
   }
 }

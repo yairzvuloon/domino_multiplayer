@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 
 class UserData {
   constructor(i_UserName) {
@@ -45,7 +44,7 @@ export default class LoginModal extends React.Component {
     e.preventDefault();
     const userName = e.target.elements.userName.value;
     const userObj = new UserData(userName);
-    console.log("handleLogin: userObj"+ JSON.stringify(userObj));
+    console.log("handleLogin: userObj" + JSON.stringify(userObj));
     if (userName === "") {
       this.setState(() => ({
         errMessage: "You must to insert name!"

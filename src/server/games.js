@@ -5,49 +5,35 @@ const chat = require("./chat");
 const gamesList = {};
 const userRoomId = {};
 
-
-// function gameAuthentication(req, res, next) {
-//   if (gamesList[req.session.id] === undefined) {
-//     res.sendStatus(401).send("you are not register to looby");
-//   } else {
-//     next();
-//   }
-// }
-
 function addGameToGamesList(req, res, next) {
-  
-  const gameNameOut=JSON.parse(req.body).gameName;
- 
+  const gameNameOut = JSON.parse(req.body).gameName;
+  let obj = null;
   if (gamesList[gameNameOut] !== undefined) {
     res.status(403).send("game name already exist!");
   } else {
-    for (gameName in gamesList) {
-      const gameData = gamesList[gameName];
-      if (gameData.hostId === req.session.id) {
-        res.status(403).send("unable to create 2 room, for one host.");
-        return;
-      }
-    }
-
-    const obj = JSON.parse(req.body);
-    obj.id = obj.gameName;
-    obj.hostId= req.session.id;
-    obj.DominoStackLogic = new Manager.DominoStack();
-    obj.validLocationsArray = createEmptyValidLocations();
-    obj.boardMap = Manager.setInitialBoard(57);
-    obj.numPlayerToStart = JSON.parse(obj.numPlayerToStart);
-    obj.currentPlayerIndex = 0;
-    obj.numberOfSubscribes = 0;
-    obj.lostQueue = [];
-    obj.winQueue = [];
-    obj.finalWinner = null;
-    obj.secondPlaceWinner = null;
-    obj.finalLost = null;
-    obj.isGameDone = false;
-    obj.numOfUsersDone = 0;
-    gamesList[gameNameOut] = obj;
-    next();
+    gamesList[gameNameOut] = createGameDataFromObj(req.body, req.session.id);
   }
+  next();
+}
+
+function createGameDataFromObj(i_Obj, hostId) {
+  const obj = JSON.parse(i_Obj);
+  obj.id = obj.gameName;
+  obj.hostId = hostId;
+  obj.DominoStackLogic = new Manager.DominoStack();
+  obj.validLocationsArray = createEmptyValidLocations();
+  obj.boardMap = Manager.setInitialBoard(57);
+  obj.numPlayerToStart = JSON.parse(obj.numPlayerToStart);
+  obj.currentPlayerIndex = 0;
+  obj.numberOfSubscribes = 0;
+  obj.lostQueue = [];
+  obj.winQueue = [];
+  obj.finalWinner = null;
+  obj.secondPlaceWinner = null;
+  obj.finalLost = null;
+  obj.isGameDone = false;
+  obj.numOfUsersDone = 0;
+  return obj;
 }
 
 function getGamesList() {
@@ -87,13 +73,13 @@ function getValidLocations(req, res, next) {
 function removeGameFromGamesList(req, res, next) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
-  // const index = roomIdObj.subscribesListIndex;
   const gameData = gamesList[roomId];
+
   removeUserFromGame(req, res, next);
 
   if (gameData !== undefined) {
     for (var i = 0; i < gameData.numberOfSubscribes; i++) {
-      userRoomId[gameData.subscribesList[i]] = undefined;
+      delete userRoomId[gameData.subscribesList[i]];
     }
     chat.removeChatRoom(roomId);
     delete gamesList[roomId];
@@ -113,11 +99,51 @@ function removeUserFromGame(req, res, next) {
     } else {
       gamesList[roomId].subscribesList.splice(index, 1);
       gamesList[roomId].numberOfSubscribes--;
-      userRoomId[req.session.id] = undefined;
+      delete userRoomId[req.session.id];
+    }
+  }
+  next();
+}
 
-      //gameData.subscribesList.splice(index, 1);
-      // gameData.numberOfSubscribes--;
-      // gamesList[roomId] = JSON.stringify(gameData);
+function removeAllUsersAndResetGame(req, res, next) {
+  const roomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = roomIdObj.id;
+  const gameData = gamesList[roomId];
+
+  if (gameData.isGameDone) {
+    const gameName = gameData.gameName;
+    const hostId = gameData.hostId;
+    const name = gameData.hostName;
+    const id = gameData.hostId;
+    const numOfPlayers = JSON.stringify(gameData.numPlayerToStart);
+
+    const gameDataObj = new Manager.GameData(
+      name,
+      hostId,
+      gameName,
+      numOfPlayers
+    );
+
+    removeGameFromGamesList(req, res, next);
+
+    gamesList[gameName] = createGameDataFromObj(
+      JSON.stringify(gameDataObj),
+      hostId
+    );
+  }
+  next();
+}
+
+function winExit(req, res, next) {
+  const roomIdObj = JSON.parse(getMyRoomId(req));
+  const roomId = roomIdObj.id;
+  const index = roomIdObj.subscribesListIndex;
+  if (roomId !== "") {
+    const gameData = gamesList[roomId];
+    if (gameData.numberOfSubscribes <= 0) {
+      res.sendStatus(401);
+    } else {
+      userRoomId[req.session.id] = undefined;
     }
   }
   next();
@@ -133,15 +159,13 @@ function getMyRoomId(req) {
 function getMyRoomData(req) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
-  // const index = roomIdObj.subscribesListIndex;
   const gameData = gamesList[roomId];
   return JSON.stringify(gameData);
 }
 
-function isHost(req) {
+function isHostOfThisGame(req) {
   const roomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = roomIdObj.id;
- 
   return JSON.stringify(gamesList[roomId].hostId === req.session.id);
 }
 
@@ -164,13 +188,13 @@ function addUserToGame(req, res, next) {
     gamesList[roomID].subscribesList[gameData.numberOfSubscribes] = {
       id: req.session.id,
       name: name,
-      stats: null
+      stats: null,
+      isActivePlayer: true
     };
     userRoomId[req.session.id] = {
       id: roomID,
       subscribesListIndex: gamesList[roomID].numberOfSubscribes
     };
-    //gameData.subscribesList[gameData.numberOfSubscribes] = req.session.id;
     gameData.numberOfSubscribes++;
     gamesList[roomID] = gameData;
     next();
@@ -286,19 +310,6 @@ function getUsersRoomData(req) {
   }
 }
 
-// function moveToNextTurn(req, res, next) {
-//   const roomId = JSON.parse(getMyRoomId(req)).id;
-//   const gameData = gamesList[roomId];
-//   const indexPlayer = gameData.currentPlayerIndex;
-//   if (req.session.id === gameData.subscribesList[indexPlayer].id) {
-//     if (indexPlayer + 1 === JSON.parse(gameData.numPlayerToStart)) {
-//       gameData.currentPlayerIndex = 0;
-//     } else {
-//       gameData.currentPlayerIndex++;
-//     }
-//   }
-// }
-
 function moveToNextTurn(req, res, next) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
   const gameData = gamesList[roomId];
@@ -334,16 +345,6 @@ function moveToNextTurn(req, res, next) {
   }
   next();
 }
-
-// function isMyTurn(req) {
-//   const roomId = JSON.parse(getMyRoomId(req)).id;
-//   const gameData = gamesList[roomId];
-//   if (gameData !== undefined) {
-//     const indexPlayer = gameData.currentPlayerIndex;
-
-//     return req.session.id === gameData.subscribesList[indexPlayer].id;
-//   } else return false;
-// }
 
 function isMyTurn(req) {
   const roomId = JSON.parse(getMyRoomId(req)).id;
@@ -383,16 +384,6 @@ function isGameDone(req) {
   return gameData.isGameDone;
 }
 
-/* const objToPost = {
-        turn: this.state.turn,
-        currentScore: this.state.currentScore,
-        average: this.state.average,
-        withdrawals: this.state.withdrawals,
-        isExistMoves: isExistPiece,
-        isCartEmpty: this.isCartEmpty()
-      };
-*/
-
 function postStats(req, res, next) {
   const getMyRoomIdObj = JSON.parse(getMyRoomId(req));
   const roomId = getMyRoomIdObj.id;
@@ -401,8 +392,6 @@ function postStats(req, res, next) {
   const myIndex = userRoomId[req.session.id].subscribesListIndex;
 
   const objToPost = JSON.parse(req.body);
-
-  //gameData.subscribesList[myIndex].stats = objToPost;
 
   gameData.subscribesList[myIndex].stats = JSON.parse(req.body);
 
@@ -417,7 +406,6 @@ function postStats(req, res, next) {
       }
     }
   }
-  // moveToNextTurn(req, res, next);
   next();
 }
 
@@ -505,23 +493,24 @@ function amIWinOrLost(req, res, next) {
 }
 
 module.exports = {
-  //gameAuthentication,
   addGameToGamesList,
   getGamesList,
   removeGameFromGamesList,
   removeUserFromGame,
+  winExit,
   getMyRoomId,
   addUserToGame,
   isUserInRoom,
   getNewCart,
   getValidLocations,
   updateValidLocationsAndBoard,
+  removeAllUsersAndResetGame,
   getCard,
   getUsersRoomData,
   isMyTurn,
   moveToNextTurn,
   getCurrentPlayer,
-  isHost,
+  isHost: isHostOfThisGame,
   myRoomData: getMyRoomData,
   isGameDone,
   postStats,
