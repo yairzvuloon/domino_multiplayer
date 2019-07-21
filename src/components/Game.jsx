@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import Board from "../components/Board.jsx";
 import Cart from "../components/Cart.jsx";
 import Timer from "../components/Timer.jsx";
@@ -89,77 +88,12 @@ export default class Game extends React.Component {
         Draw
       </button>
     );
-    let gameStartSentence = null;
-    let gameSentence = null;
-    let removeButton = null;
-    let exitButton = null;
-    let gameTurnsSentence = null;
-
-    if (!this.state.isAllPlayersInRoom || this.state.isGameDone) {
-      exitButton = (
-        <button
-          key="exit"
-          className="logout btn"
-          onClick={this.handleExitButton}
-        >
-          exit
-        </button>
-      );
-    } else if (
-      !this.state.isGameDone &&
-      this.state.isUserDone &&
-      this.state.isWin
-    ) {
-      exitButton = (
-        <button
-          key="exit"
-          className="logout btn"
-          onClick={this.handleWinExitToLobby}
-        >
-          exit
-        </button>
-      );
-    }
-
-    if (
-      this.state.isHost &&
-      (this.state.numberOfSubscribes === 1 || this.state.isGameDone)
-    ) {
-      removeButton = (
-        <button
-          key="exitAndRemove"
-          className="logout btn"
-          onClick={this.handleRemoveButton}
-        >
-          remove game
-        </button>
-      );
-    }
-
-    if (!this.state.isGameDone && this.state.isGameStarted) {
-      if (this.state.turn === 0) {
-        gameStartSentence = <p>the game started!!! </p>;
-      } else {
-        gameStartSentence = null;
-      }
-
-      if (!this.state.isMyTurn) {
-        gameTurnsSentence = <p>it's {this.state.currentPlayerName} turn </p>;
-      } else {
-        gameTurnsSentence = <p>it's your turn! </p>;
-      }
-    }
-    if (this.state.isGameStarted) {
-      if (!this.state.isAllPlayersInRoom) {
-        gameTurnsSentence = <p>we waiting for more players </p>;
-      } else {
-        if (this.state.isUserDone && this.state.isWin) {
-          gameSentence = <p>YOU WIN!!!</p>;
-        } else if (this.state.isGameDone && this.state.isLost) {
-          gameSentence = <p>YOU LOST:(</p>;
-        }
-      }
-    }
+    const removeButton = this.createRemoveButton();
+    const exitButton = this.createExitButton();
+    const obj = this.createGameSentences();
+    const gameStartSentence = obj.gameStartSentence;
+    const gameSentence = obj.gameSentence;
+    const gameTurnsSentence = obj.gameTurnsSentence;
 
     return (
       <div key="homeContainer" id="homeContainer">
@@ -255,6 +189,92 @@ export default class Game extends React.Component {
     return isExist;
   }
 
+  createExitButton() {
+    let exitButton = null;
+    if (!this.state.isAllPlayersInRoom || this.state.isGameDone) {
+      exitButton = (
+        <button
+          key="exit"
+          className="logout btn"
+          onClick={this.handleExitButton}
+        >
+          exit
+        </button>
+      );
+    } else if (
+      !this.state.isGameDone &&
+      this.state.isUserDone &&
+      this.state.isWin
+    ) {
+      exitButton = (
+        <button
+          key="exit"
+          className="logout btn"
+          onClick={this.handleWinExitToLobby}
+        >
+          exit
+        </button>
+      );
+    }
+    return exitButton;
+  }
+
+  createRemoveButton() {
+    let removeButton = null;
+    if (
+      this.state.isHost &&
+      (this.state.numberOfSubscribes === 1 || this.state.isGameDone)
+    ) {
+      removeButton = (
+        <button
+          key="exitAndRemove"
+          className="logout btn"
+          onClick={this.handleRemoveButton}
+        >
+          remove game
+        </button>
+      );
+    }
+    return removeButton;
+  }
+
+  createGameSentences() {
+    let gameStartSentence = null;
+    let gameSentence = null;
+    let gameTurnsSentence = null;
+
+    if (!this.state.isGameDone && this.state.isGameStarted) {
+      if (this.state.turn === 0) {
+        gameStartSentence = <p>the game started!!! </p>;
+      } else {
+        gameStartSentence = null;
+      }
+
+      if (!this.state.isMyTurn) {
+        gameTurnsSentence = <p>it's {this.state.currentPlayerName} turn </p>;
+      } else {
+        gameTurnsSentence = <p>it's your turn! </p>;
+      }
+    }
+
+    if (!this.state.isAllPlayersInRoom) {
+      gameTurnsSentence = <p>we waiting for more players </p>;
+    }
+
+    if (this.state.isGameStarted) {
+      if (this.state.isUserDone && this.state.isWin) {
+        gameSentence = <p>YOU WIN!!!</p>;
+      } else if (this.state.isGameDone && this.state.isLost) {
+        gameSentence = <p>YOU LOST:(</p>;
+      }
+    }
+
+    return {
+      gameStartSentence: gameStartSentence,
+      gameTurnsSentence: gameTurnsSentence,
+      gameSentence: gameSentence
+    };
+  }
   isTheFirstTurn() {
     return this.state.boardMap[28][28].valid;
   }

@@ -1,7 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import LoginModal from "./LoginModal.jsx";
-//import ChatContainer from "./ChatContainer.jsx";
 import UsersList from "./UsersList.jsx";
 import GamesList from "./GamesList.jsx";
 import NewGameModal from "./NewGameModal.jsx";
